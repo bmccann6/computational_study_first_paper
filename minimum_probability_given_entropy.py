@@ -42,4 +42,4 @@ def minimize_x_given_entropy(r, b):
 minimize_x_given_entropy(10, 0.1)
 
 
-This code is not useful anymore.asdf
+This code is not useful anymore.
