@@ -18,10 +18,9 @@ resource_sets = {
     "2024": {"cocaine": 100, "heroin": 65, "meth": 35}
 }       # Outer-keys are years. The keys in the inner-dictionaries are drugs. The values of those inner-keys are the number of shipment units of that drug into the United states in the year of the outer-key
                 
-# r = len(resource_sets) 
-sizes_hiding_locations = [10, 8, 5, 5, 3]    #! CHANGE THIS LATER. JUST A PLACEHOLDER FOR NOW. At each index i, the size of hiding location i is the value.
-detector_accuracies = [0.9, 0.8, 0.3, 0, 0]
-
-required_num_samples_per_bin = 100
+r = len(resource_sets) 
+sizes_hiding_locations = [50, 40, 35, 20, 20, 15, 10, 5, 3, 2]       #! CHANGE THIS LATER. JUST A PLACEHOLDER FOR NOW. At each index i, the size of hiding location i is the value.
+detector_accuracies = [0.8, 0.8, 0.7, 0.5, 0.5, 0.3, 0.3, 0, 0, 0]     
+required_num_samples_per_bin = 10
 
 

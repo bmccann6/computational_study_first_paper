@@ -30,7 +30,7 @@ np.random.seed(0)
 # 
 # And assume the following variables are defined in entropy_plot_input_variables:
 # item_values, resource_sets, sizes_hiding_locations, detector_accuracies, required_num_samples_per_bin
-#
+#x
 # For our tests below we’ll use small dummy inputs where appropriate.
 
 # Dummy variables for testing some functions:
@@ -59,7 +59,7 @@ class TestEntropyFunctions(unittest.TestCase):
             error_checking(sizes_dummy, detector_accuracies_dummy, resource_sets_invalid, item_values_dummy)
 
     def test_generate_probabilities(self):
-        power = 1
+        power = 1.5
         probabilities = generate_probabilities(resource_sets_dummy, power)
         # Check that the keys match those of resource_sets_dummy.
         self.assertEqual(set(probabilities.keys()), set(resource_sets_dummy.keys()))
@@ -68,8 +68,8 @@ class TestEntropyFunctions(unittest.TestCase):
 
     def test_calculate_entropy(self):
         # For a uniform distribution over 2 elements, the entropy is 1 (log₂2).
-        probabilities = np.array([0.5, 0.5])
-        entropy = calculate_entropy(probabilities)
+        probs = {"Year 1": 0.5, "Year 2": 0.5}
+        entropy = calculate_entropy(probs)
         self.assertAlmostEqual(entropy, 1.0, places=6)
 
     def test_calculate_A_i_values(self):
@@ -131,7 +131,7 @@ class TestEntropyFunctions(unittest.TestCase):
             # Run main(). The test passes if main() terminates without error.
             main()
         finally:
-            epiv.required_num_samples_per_bin = original_required
+            epiv.required_num_samples_per_bin = original_required      # Restore the original value. Ensures that no matter what happens during the test (whether it passes, fails, or raises an exception), the original value of required_num_samples_per_bin is restored.
 
 if __name__ == '__main__':
     unittest.main()
