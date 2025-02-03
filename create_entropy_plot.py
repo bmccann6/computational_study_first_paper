@@ -1,7 +1,9 @@
+import json
 import numpy as np
 import matplotlib.pyplot as plt
-from pprint import pprint
+from pprint import pprint, pformat
 import time
+import curses
 from entropy_plot_input_variables import item_values, resource_sets, r, sizes_hiding_locations, detector_accuracies, required_num_samples_per_bin
 
 
@@ -21,39 +23,35 @@ def generate_probabilities(power):
 
 def calculate_normalized_entropy(probabilities):
     probs = np.array(list(probabilities.values()))
-    entropy = -np.sum(probs * np.log2(probs)) / np.log2(r)      
+    entropy = -np.sum(probs * np.log2(probs)) / np.log2(r)
     return entropy
 
 def calculate_A_i_values(resource_set_dict):
-    """
-    This function calculates the A_i values from just backloading. Like the A_i values in the writeup mathieu gave for calculating the breaking indices.
-    """
-    
-    hider_resources_sorted = sorted(resource_set_dict.items(), key=lambda x: item_values[x[0]])     # Creates a list of tuples (drug, quantity) from resource_set_dict and sorts the tuples based on the value of the drug, from low to high.
-    local_copy_sizes_hiding_locations = sizes_hiding_locations.copy()       # We make a copy so that we don't modify sizes_hiding_locations outside this function
+    hider_resources_sorted = sorted(resource_set_dict.items(), key=lambda x: item_values[x[0]])
+    local_copy_sizes_hiding_locations = sizes_hiding_locations.copy()
     A_i_values = {i: 0 for i in range(len(sizes_hiding_locations))}
     i = 0
     
-    while local_copy_sizes_hiding_locations and hider_resources_sorted:     # While both are not empty lists
+    while local_copy_sizes_hiding_locations and hider_resources_sorted:
         if local_copy_sizes_hiding_locations[0] == 0:
-            local_copy_sizes_hiding_locations.pop(0)       
+            local_copy_sizes_hiding_locations.pop(0)
             i += 1
             continue
         if hider_resources_sorted[0][1] == 0:
             hider_resources_sorted.pop(0)
             continue
         
-        assignment_amount = min(local_copy_sizes_hiding_locations[0], hider_resources_sorted[0][1])   
-        item_name = hider_resources_sorted[0][0] 
+        assignment_amount = min(local_copy_sizes_hiding_locations[0], hider_resources_sorted[0][1])
+        item_name = hider_resources_sorted[0][0]
         item_value = item_values[item_name]
         A_i_values[i] += assignment_amount * item_value
         local_copy_sizes_hiding_locations[0] -= assignment_amount
         hider_resources_sorted[0] = (hider_resources_sorted[0][0], hider_resources_sorted[0][1] - assignment_amount)
         
     return A_i_values
-        
+
 def calculate_breaking_indices(A_i_values):
-    n = len(sizes_hiding_locations)   
+    n = len(sizes_hiding_locations)
     i_0 = 0
     l = 0
     breaking_indices = [i_0]
@@ -62,10 +60,8 @@ def calculate_breaking_indices(A_i_values):
         current_max = float('-inf')
         best_k = None
         
-        # Calculate the maximum average for segments starting from i_l
         for k in range(breaking_indices[l], n):
-            # Calculate sum and average using dictionary keys
-            segment_sum = sum(A_i_values[j] for j in range(breaking_indices[l], k + 1))   
+            segment_sum = sum(A_i_values[j] for j in range(breaking_indices[l], k + 1))
             segment_length = k + 1 - breaking_indices[l]
             avg = segment_sum / segment_length
             
@@ -75,43 +71,68 @@ def calculate_breaking_indices(A_i_values):
         
         breaking_indices.append(best_k)
         
-        # Check if we reach the end
         if breaking_indices[l+1] == n:
             return breaking_indices
         else:
             l += 1
-        
+
 def calculate_expected_value_items_at_each_node_under_equilibrium(A_i_values, breaking_indices):
     expected_values = {}
     for node in range(len(A_i_values)):
-        relevant_indices = [i for i in range(len(breaking_indices) - 1) if breaking_indices[i] <= node < breaking_indices[i + 1]]
-        expected_values[node] = np.mean([A_i_values[j] for j in range(breaking_indices[relevant_indices[0]], breaking_indices[relevant_indices[0] + 1])])
+        relevant_indices = [
+            i for i in range(len(breaking_indices) - 1)
+            if breaking_indices[i] <= node < breaking_indices[i + 1]
+        ]
+        expected_values[node] = np.mean([
+            A_i_values[j]
+            for j in range(breaking_indices[relevant_indices[0]], breaking_indices[relevant_indices[0] + 1])
+        ])
         
     return expected_values
 
 def calculate_expected_fraction_undetected_value_specific_resource_set(resource_set_dict):
-    A_i_values = calculate_A_i_values(resource_set_dict)      #NOTE: We note that the A_i values here are the A_i values in the algorithm of mathieu's writeup for the algorithm at the end to find the breaking indices. It is just the initial A_i values from backloading. Not the A_i values in equilibrium. I don't want you to get the A_i values here confused with A(sigma^2, i) in my paper.
-    breaking_indices = calculate_breaking_indices(A_i_values)        
+    A_i_values = calculate_A_i_values(resource_set_dict)
+    breaking_indices = calculate_breaking_indices(A_i_values)
     expected_value_items_each_node = calculate_expected_value_items_at_each_node_under_equilibrium(A_i_values, breaking_indices)
     total_value = sum(expected_value_items_each_node.values())
-    amount_value_detected = sum(detector_accuracies[i] * expected_value_items_each_node[i] for i in range(len(expected_value_items_each_node)))
-    expected_fraction_undetected_value_specific_resource_set  = (total_value - amount_value_detected) / total_value
-    
-    return expected_fraction_undetected_value_specific_resource_set
-    
+    amount_value_detected = sum(detector_accuracies[i] * expected_value_items_each_node[i]
+                               for i in range(len(expected_value_items_each_node)))
+    fraction_undetected = (total_value - amount_value_detected) / total_value
+    # Return both the fraction and the breaking_indices so the caller can log them
+    return fraction_undetected, breaking_indices
+
 def calculate_expected_fraction_undetected_value_across_resource_sets(probabilities):
-    expected_fraction_undetected_value = 0 
+    # We’ll collect each year’s breaking_indices in a structure to save
+    resource_sets_info = []
+    expected_fraction_undetected_value = 0
+
     for year, resource_set_dict in resource_sets.items():
-        expected_fraction_undetected_value += probabilities[year] * calculate_expected_fraction_undetected_value_specific_resource_set(resource_set_dict)
-        
-    return expected_fraction_undetected_value
+        frac_undetected, breaking_indices = calculate_expected_fraction_undetected_value_specific_resource_set(resource_set_dict)
+        resource_sets_info.append({
+            "year": year,
+            "breaking_indices": breaking_indices
+        })
+        expected_fraction_undetected_value += probabilities[year] * frac_undetected
+
+    # Log to JSON each time we compute for these probabilities
+    log_entry = {
+        "probabilities": probabilities,
+        "resource_sets": resource_sets_info
+    }
+    all_calculations.append(log_entry)
     
+    # Write out after each iteration so you can see updates in real time
+    with open("breaking_indices_log.json", "w") as f:
+        json.dump(all_calculations, f, indent=4)
+
+    return expected_fraction_undetected_value
+
 def update_bin_dict(dict_bins_and_values, entropy, fraction_value_detected):
     for key in dict_bins_and_values:
         if key[0] <= entropy < key[1]:
             if isinstance(dict_bins_and_values[key], list) and (len(dict_bins_and_values[key]) < required_num_samples_per_bin):
                 dict_bins_and_values[key].append(fraction_value_detected)
-                if len(dict_bins_and_values[key]) == required_num_samples_per_bin:     # If we have now hit required_num_samples_per_bin once we just added fraction_value_detected, then we are done with this bin and we will take the average of the values associated with that bin of the fraction of undetected value.
+                if len(dict_bins_and_values[key]) == required_num_samples_per_bin:
                     dict_bins_and_values[key] = np.mean(dict_bins_and_values[key])
             break
     return dict_bins_and_values
@@ -126,36 +147,50 @@ def plot_entropy_bar_chart(dict_bins_and_values):
     plt.title("Entropy vs. Fraction Undetected")
     plt.show()
 
-
-def main():    
+def main(stdscr):
+    # Clear screen
+    stdscr.clear()
+    
     start_time = time.time()
-    error_checking()   
+    error_checking()
     power = 1
     power_step_size = 0.5
-    dict_bins_and_values = {(i/10, (i+1)/10): [] for i in range(10)}   # This will be used to store the average fraction of undetected values for the probability distributions generated which fall into each of these entropy bins
-    max_num_while_loop_iterations_before_increasing_power = required_num_samples_per_bin * 100      # This is a value which signals that will be helpful to signal that we are not generating enough samples with the desired entropy range, so we should increase the power.
+    dict_bins_and_values = {(i/10, (i+1)/10): [] for i in range(10)}
+    max_num_while_loop_iterations_before_increasing_power = required_num_samples_per_bin * 10
     num_iterations_while_loop_at_current_power = 0
-        
+    num_iterations = 0
+    
     for i in range(9, -1, -1):
-        while isinstance(dict_bins_and_values[(i/10, (i+1)/10)], list) and len(dict_bins_and_values[(i/10, (i+1)/10)]) < required_num_samples_per_bin:
+        while (isinstance(dict_bins_and_values[(i/10, (i+1)/10)], list) and len(dict_bins_and_values[(i/10, (i+1)/10)]) < required_num_samples_per_bin):
             probabilities = generate_probabilities(power)
             entropy = calculate_normalized_entropy(probabilities)
             expected_fraction_value_detected = calculate_expected_fraction_undetected_value_across_resource_sets(probabilities)
             dict_bins_and_values = update_bin_dict(dict_bins_and_values, entropy, expected_fraction_value_detected)
-            print("Time Elapsed: ", time.time() - start_time)
+            
+            stdscr.addstr(0, 0, "Dict_bins_and_values: {}".format(pformat({k: len(v) if isinstance(v, list) else "All samples obtained." for k, v in dict_bins_and_values.items()})))
+            stdscr.addstr(10, 0, "Power: {}".format(power))
+            stdscr.addstr(11, 0, "Iterations: {}".format(num_iterations))
+            stdscr.addstr(12, 0, "Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
+            stdscr.refresh()  # Refresh the screen
+            
+            num_iterations += 1
             num_iterations_while_loop_at_current_power += 1
             if num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power:
                 power += power_step_size
+                if power >= 2:
+                    power *= 2
                 num_iterations_while_loop_at_current_power = 0
-            
+
+    # # Wait for input to exit
+    # stdscr.addstr(4, 0, "Press any key to continue...")
+    # stdscr.refresh()
+    # stdscr.getkey()
+
     print("These are the bins and their values:")
-    pprint(dict_bins_and_values)        
+    pprint(dict_bins_and_values)
     plot_entropy_bar_chart(dict_bins_and_values)
 
-
-
-\ici Ask chatgpt o3 or o1 models for what could be ways to modify the input variables so that the resulting graph has greater fraction of undetected value as the entropy increases
-Or first, double check again that I am doing the updating bins correctly and everything.
-    
 if __name__=="__main__":
-    main()
+    # Store all runs here before/while writing them out
+    all_calculations = []
+    curses.wrapper(main)
