@@ -1,6 +1,6 @@
 item_values = {"cocaine": 100,
                 "heroin": 300,
-                "meth": 94}     # The keys are drugs (e.g. "cocaine") and the value of the key is the value of the drugs per unit of shipment. 
+                "meth": 24}     # The keys are drugs (e.g. "cocaine") and the value of the key is the value of the drugs per unit of shipment. 
 
 resource_sets = {
     "2012": {"cocaine": 37, "heroin": 12, "meth": 88},
@@ -21,6 +21,6 @@ resource_sets = {
 r = len(resource_sets) 
 sizes_hiding_locations = [50, 40, 35, 20, 20, 15, 10, 5, 3, 2]       #! CHANGE THIS LATER. JUST A PLACEHOLDER FOR NOW. At each index i, the size of hiding location i is the value.
 detector_accuracies = [0.8, 0.8, 0.7, 0.5, 0.5, 0.3, 0.3, 0, 0, 0]     
-required_num_samples_per_bin = 10
+required_num_samples_per_bin = 100
 
 

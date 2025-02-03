@@ -148,10 +148,14 @@ def main():
                 power += power_step_size
                 num_iterations_while_loop_at_current_power = 0
             
-        
+    print("These are the bins and their values:")
+    pprint(dict_bins_and_values)        
     plot_entropy_bar_chart(dict_bins_and_values)
 
 
+
+\ici Ask chatgpt o3 or o1 models for what could be ways to modify the input variables so that the resulting graph has greater fraction of undetected value as the entropy increases
+Or first, double check again that I am doing the updating bins correctly and everything.
     
 if __name__=="__main__":
     main()
