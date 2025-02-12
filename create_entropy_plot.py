@@ -88,7 +88,7 @@ def calculate_expected_value_items_at_each_node_under_equilibrium(A_i_values, br
             for j in range(breaking_indices[relevant_indices[0]], breaking_indices[relevant_indices[0] + 1])
         ])
         
-    return expected_values
+    return expected_values 
 
 def calculate_expected_fraction_undetected_value_specific_resource_set(resource_set_dict):
     A_i_values = calculate_A_i_values(resource_set_dict)
