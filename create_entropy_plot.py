@@ -140,11 +140,16 @@ def update_bin_dict(dict_bins_and_values, entropy, fraction_value_detected):
 def plot_entropy_bar_chart(dict_bins_and_values):
     x_labels = [f"{k[0]:.1f}-{k[1]:.1f}" for k in dict_bins_and_values]
     y_values = [dict_bins_and_values[k] for k in dict_bins_and_values]
+ 
+    # Calculate the minimum of y_values rounded down to the nearest 2 decimal places
+    y_min = np.floor(min(y_values) * 100) / 100 
     
     plt.bar(x_labels, y_values)
     plt.xlabel("Entropy Bins")
     plt.ylabel("Average Fraction Undetected")
     plt.title("Entropy vs. Fraction Undetected")
+    plt.ylim(y_min)  # Set the lower limit of the y-axis    
+    plt.savefig("entropy_vs_fraction_undetected.png")
     plt.show()
 
 def main(stdscr):
@@ -175,10 +180,12 @@ def main(stdscr):
             
             num_iterations += 1
             num_iterations_while_loop_at_current_power += 1
-            if num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power:
-                power += power_step_size
-                if power >= 2:
-                    power *= 2
+            # if num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power:
+            #     # power += power_step_size
+            #     # if power >= 2:
+            #     #     power *= 2
+            if all(not isinstance(dict_bins_and_values[(j/10, (j+1)/10)], list) for j in range(i, 10)) or (num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power):     # If the higher bins have been filled (because when they are filled, we take their average and thus have a float instead of a list)
+                power *= 2
                 num_iterations_while_loop_at_current_power = 0
 
     # # Wait for input to exit
