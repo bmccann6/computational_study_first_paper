@@ -78,7 +78,7 @@ detectors = { "German sheperd": (3, 0.868),
             }
 
 percent_cargo_containers_storing_drugs = 0.01
-sizes_hiding_locations = sorted(int(percent_cargo_containers_storing_drugs) * hiding_locations.values(), reverse=True)        # At each index i, the size of hiding location i is the value.
+sizes_hiding_locations = [int(size * percent_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
 detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)], reverse=True)
 
 # sizes_hiding_locations = [50, 40, 35, 20, 20, 15, 10, 5, 3, 2]       # At each index i, the size of hiding location i is the value.
@@ -86,3 +86,5 @@ detector_accuracies = sorted([accuracy for count, accuracy in detectors.values()
 
 required_num_samples_per_bin = 50
 
+
+Comment out necessary things in order to do testing. Dont use real-world data for testing.
