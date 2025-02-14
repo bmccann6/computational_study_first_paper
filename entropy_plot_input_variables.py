@@ -1,4 +1,4 @@
-# item_values = {"cocaine": 100,
+# item_vals = {"cocaine": 100,
 #                 "heroin": 300,
 #                 "meth": 24}     # The keys are drugs (e.g. "cocaine") and the value of the key is the value of the drugs per unit of shipment. 
 
@@ -20,7 +20,7 @@
 
 
 # The following is the item values for our real data
-item_values = { "meth": 11000,
+item_vals = { "meth": 11000,
                 "cannabis": 2000,
                 "cocaine": 29000,
                 "heroin": 50000,
@@ -38,7 +38,7 @@ resource_sets = {
       # Outer-keys are years. The keys in the inner-dictionaries are drugs. The values of those inner-keys are the number of shipment units of that drug into the United states in the year of the outer-key
                 
                 
-r = len(resource_sets) 
+num_resource_sets = len(resource_sets) 
 
 # These are the hiding locations based on Figure 8 of the "Port Performance Freight Statistics: 2025 Annual Report". 
 # The keys are the imports. Also, we only do mainland US ports (not Alaska or Hawaii)
@@ -79,12 +79,14 @@ detectors = { "German sheperd": (3, 0.868),
 
 percent_cargo_containers_storing_drugs = 0.01
 sizes_hiding_locations = [int(size * percent_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
-detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)], reverse=True)
+total_real_detectors = sum(count for count, _ in detectors.values())
+null_detectors_count = len(sizes_hiding_locations) - total_real_detectors
+detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)] + [0] * null_detectors_count, reverse=True)
 
 # sizes_hiding_locations = [50, 40, 35, 20, 20, 15, 10, 5, 3, 2]       # At each index i, the size of hiding location i is the value.
 # detector_accuracies = [0.8, 0.8, 0.7, 0.5, 0.5, 0.3, 0.3, 0, 0, 0]   # Detector accuracies, given in descending order 
 
-required_num_samples_per_bin = 50
+num_samples_needed_per_bin = 50
 
 
-Comment out necessary things in order to do testing. Dont use real-world data for testing.
+# Comment out necessary things in order to do testing. Dont use real-world data for testing.
