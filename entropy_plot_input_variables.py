@@ -88,7 +88,7 @@ detector_accuracies = sorted([accuracy for count, accuracy in detectors.values()
 # detector_accuracies = [0.8, 0.8, 0.7, 0.5, 0.5, 0.3, 0.3, 0, 0, 0]   # Detector accuracies, given in descending order 
 
 num_samples_needed_per_bin = 100
-num_bins = 10
+num_bins = 20
 
 
 # Comment out necessary things in order to do testing. Dont use real-world data for testing.

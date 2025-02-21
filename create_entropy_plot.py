@@ -203,7 +203,7 @@ def main(stdscr):
     ] 
  
         
-    for i in range(9, -1, -1):
+    for i in range(num_bins-1, -1, -1):
         while ("final_value" not in bins_data[(i/num_bins, (i+1)/num_bins)] and len(bins_data[(i/num_bins, (i+1)/num_bins)]["expected_values_detected"]) < num_samples_needed_per_bin):
             prob_dist = generate_probability_distribution(power)
             entropy = calculate_normalized_entropy(prob_dist)
