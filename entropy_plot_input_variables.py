@@ -78,8 +78,14 @@ detectors = { "German sheperd": (3, 0.868),
               "Human": (5, 0.3)            
             }
 
-percent_cargo_containers_storing_drugs = 0.02
-sizes_hiding_locations = [int(size * percent_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
+
+num_items_per_year = {year: sum(resources.values()) for year, resources in resource_sets.items()}
+max_num_items_across_years = max(num_items_per_year.values())
+total_capacity = sum(hiding_locations.values())
+fraction_cargo_containers_storing_drugs = max_num_items_across_years/total_capacity   # We will multiply all the capacities in hiding_locations by this value in other modules. It is useful because we will never need to have the total capacity be greater than the max capacity needed across all years. Also, by having a fraction we will multiply all capacities by later in other modules, we make the changes to capacities more uniform across locations.
+print(f"This is fraction_cargo_containers_storing_drugs: {fraction_cargo_containers_storing_drugs}")
+
+sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
 total_real_detectors = sum(count for count, _ in detectors.values())
 null_detectors_count = len(sizes_hiding_locations) - total_real_detectors
 detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)] + [0] * null_detectors_count, reverse=True)

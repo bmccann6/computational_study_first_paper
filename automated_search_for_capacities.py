@@ -1,13 +1,10 @@
 import random
 from deap import base, creator, tools, algorithms
-from entropy_plot_input_variables import resource_sets, hiding_locations, percent_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies
+from entropy_plot_input_variables import resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies, max_num_items_across_years
 from create_entropy_plot import calculate_backloading_stack_values, calculate_breakpoints, calculate_expected_value_under_equilibrium_each_node
 from pprint import pprint as pprint
 
 
-def get_max_total_capacity_across_all_resource_sets(resource_sets):
-    totals_per_year = {year: sum(resources.values()) for year, resources in resource_sets.items()}
-    return max(totals_per_year.values())
 
 def compute_equilibrium_payoffs(individual):
     """
@@ -108,9 +105,15 @@ def print_final_results(best_solution_found, best_fitness):
     print(f"Best diversity (sum of pairwise payoff differences): {best_fitness:,.2f}")   
         
 if __name__ == "__main__":
+    
+    
+    \ici I think we need something as well which ensures that for a given year, the total capacity is >= the number of items once we do the tolerance_percent_deviation_real_capacity.
+    But isnt the total capacity supposed to be the same regardless of the year? Yeah.
+    So how do we resolve this? Because we cant have the total capacity be such that for some year, the number of drugs is greater than the total capacity.
+    
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
     sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)
-    sorted_locs = [(loc, cap * percent_cargo_containers_storing_drugs) for loc, cap in sorted_locs]
+    sorted_locs = [(loc, cap * fraction_cargo_containers_storing_drugs) for loc, cap in sorted_locs]
     # real_caps = [cap for loc, cap in sorted_locs]
     real_caps = [cap for loc, cap in sorted_locs]
     #\ici The above version of real_caps worked well. Maybe instead of 0.01, just pick a value like 0.05. That way we still greatly limit the search space from likely impractical solutions, but still cut down on state space.
