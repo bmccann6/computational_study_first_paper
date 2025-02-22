@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from pprint import pprint, pformat
 import time
 import curses
-from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, num_samples_needed_per_bin
+from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN
 
 
 def validate_data():
@@ -147,7 +147,7 @@ def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, 
         bin_data["expected_total_values"].append(expected_total_value_this_prob_dist)
         
         # If we've reached the required number of samples, compute the final value
-        if len(bin_data["expected_values_detected"]) == num_samples_needed_per_bin:
+        if len(bin_data["expected_values_detected"]) == NUM_SAMPLES_NEEDED_PER_BIN:
             total_detected = sum(bin_data["expected_values_detected"])
             total_all = sum(bin_data["expected_total_values"])
             bin_data["final_value"] = total_detected / total_all
@@ -182,12 +182,12 @@ def main(stdscr):
     power = 1
     power_step_factor = 1.75        # From experimenting, I found that this value makes the code run decently fast
     bins_data = {(i/10, (i+1)/10): {"expected_values_detected": [], "expected_total_values": []} for i in range(10)}
-    max_num_while_loop_iterations_before_increasing_power = num_samples_needed_per_bin * 10
+    max_num_while_loop_iterations_before_increasing_power = NUM_SAMPLES_NEEDED_PER_BIN * 10
     num_iterations_while_loop_at_current_power = 0
     num_iterations = 0
     
     for i in range(9, -1, -1):
-        while ("final_value" not in bins_data[(i/10, (i+1)/10)] and len(bins_data[(i/10, (i+1)/10)]["expected_values_detected"]) < num_samples_needed_per_bin):
+        while ("final_value" not in bins_data[(i/10, (i+1)/10)] and len(bins_data[(i/10, (i+1)/10)]["expected_values_detected"]) < NUM_SAMPLES_NEEDED_PER_BIN):
             prob_dist = generate_probability_distribution(power)
             entropy = calculate_normalized_entropy(prob_dist)
             expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist)

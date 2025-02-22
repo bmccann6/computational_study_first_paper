@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from pprint import pprint, pformat
 import time
 import curses
-from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, num_samples_needed_per_bin, num_bins
+from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
 
 
 def validate_data():
@@ -30,15 +30,15 @@ def calculate_normalized_entropy(prob_dist):
 
 
 # NOTE: These are the A_i values in the algorithm mathieu wrote. NOTE! They are not the expected value of items at each node i.
-def calculate_backloading_stack_values(resource_set_dict):
+def calculate_backloading_stack_values(resource_set_dict, capacities=sizes_hiding_locations):
     hider_resources_sorted = sorted(resource_set_dict.items(), key=lambda x: item_vals[x[0]])
-    local_copy_sizes_hiding_locations = sizes_hiding_locations.copy()          # We make a local copy because we will be modifying the sizes of the hiding locations as we fill them up. But we don't want to change sizes_hiding_locations because we need that in later calls.
-    backloading_stack_values = {i: 0 for i in range(len(sizes_hiding_locations))}
+    local_copy_capacities = capacities.copy()          # We make a local copy because we will be modifying the sizes of the hiding locations as we fill them up. But we don't want to change capacities because we need that in later calls.
+    backloading_stack_values = {i: 0 for i in range(len(capacities))}
     i = 0
     
-    while local_copy_sizes_hiding_locations and hider_resources_sorted:
-        if local_copy_sizes_hiding_locations[0] == 0:
-            local_copy_sizes_hiding_locations.pop(0)
+    while local_copy_capacities and hider_resources_sorted:
+        if local_copy_capacities[0] == 0:
+            local_copy_capacities.pop(0)
             i += 1
             continue
         
@@ -46,17 +46,17 @@ def calculate_backloading_stack_values(resource_set_dict):
             hider_resources_sorted.pop(0)
             continue
         
-        assignment_amount = min(local_copy_sizes_hiding_locations[0], hider_resources_sorted[0][1])
+        assignment_amount = min(local_copy_capacities[0], hider_resources_sorted[0][1])
         item_name = hider_resources_sorted[0][0]
         item_value = item_vals[item_name]
         backloading_stack_values[i] += assignment_amount * item_value
-        local_copy_sizes_hiding_locations[0] -= assignment_amount
+        local_copy_capacities[0] -= assignment_amount
         hider_resources_sorted[0] = (hider_resources_sorted[0][0], hider_resources_sorted[0][1] - assignment_amount)
         
     return backloading_stack_values
 
-def calculate_breakpoints(backloading_stack_values):
-    n = len(sizes_hiding_locations)
+def calculate_breakpoints(backloading_stack_values, capacities=sizes_hiding_locations):
+    n = len(capacities)
     i_0 = 0
     l = 0
     breakpoints = [i_0]
@@ -104,13 +104,11 @@ def compute_resource_sets_info_for_json():
     for year, resource_set_dict in resource_sets.items():
         backloading_stack_values = calculate_backloading_stack_values(resource_set_dict)
         breakpoints = calculate_breakpoints(backloading_stack_values)
-        expected_value_items_each_node = calculate_expected_value_under_equilibrium_each_node(
-            backloading_stack_values, breakpoints
-        )
+        expected_value_items_each_node_this_prob_dist_specific_resource_set = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)
         resource_sets_info.append({
             "year": year,
             "breakpoints": breakpoints,
-            "expected value of items at each node in equilibrium": expected_value_items_each_node
+            "expected value of items at each node in equilibrium": expected_value_items_each_node_this_prob_dist_specific_resource_set
         })
     return resource_sets_info
 
@@ -122,16 +120,14 @@ def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_
     for year, resource_set_dict in resource_sets.items():       
         backloading_stack_values = calculate_backloading_stack_values(resource_set_dict)    
         breakpoints = calculate_breakpoints(backloading_stack_values)
-        expected_value_items_each_node = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)        
-        
-        expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node[i] for i in range(len(expected_value_items_each_node)))        
-        expected_total_value_this_prob_dist_specific_resource_set = sum(expected_value_items_each_node[i] for i in range(len(expected_value_items_each_node)))
+        expected_value_items_each_node_this_prob_dist_specific_resource_set = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)        
 
+        expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
+        expected_total_value_this_prob_dist_specific_resource_set = sum(expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))
+        
         expected_value_detected_this_prob_dist += prob_dist[year] * expected_value_detected_this_prob_dist_specific_resource_set
         expected_total_value_this_prob_dist += prob_dist[year] * expected_total_value_this_prob_dist_specific_resource_set
 
-
-    
     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
 
 def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist):
@@ -154,7 +150,7 @@ def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, 
         bin_data["expected_total_values"].append(expected_total_value_this_prob_dist)
         
         # If we've reached the required number of samples, compute the final value
-        if len(bin_data["expected_values_detected"]) == num_samples_needed_per_bin:
+        if len(bin_data["expected_values_detected"]) == NUM_SAMPLES_NEEDED_PER_BIN:
             total_detected = sum(bin_data["expected_values_detected"])
             total_all = sum(bin_data["expected_total_values"])
             bin_data["final_value"] = total_detected / total_all
@@ -189,9 +185,9 @@ def main(stdscr):
     start_time = time.time()
     validate_data()
     power = 1
-    power_step_factor = 1.75        # From experimenting, I found that this value makes the code run decently fast
-    bins_data = {(i/num_bins, (i+1)/num_bins): {"expected_values_detected": [], "expected_total_values": []} for i in range(num_bins)}
-    max_num_while_loop_iterations_before_increasing_power = num_samples_needed_per_bin * num_bins
+    power_step_factor = 1.5        # From experimenting, I found that this value makes the code run decently fast
+    bins_data = {(i/NUM_BINS, (i+1)/NUM_BINS): {"expected_values_detected": [], "expected_total_values": []} for i in range(NUM_BINS)}
+    max_num_while_loop_iterations_before_increasing_power = NUM_SAMPLES_NEEDED_PER_BIN * NUM_BINS
     num_iterations_while_loop_at_current_power = 0
     num_iterations = 0
  
@@ -203,8 +199,8 @@ def main(stdscr):
     ] 
  
         
-    for i in range(num_bins-1, -1, -1):
-        while ("final_value" not in bins_data[(i/num_bins, (i+1)/num_bins)] and len(bins_data[(i/num_bins, (i+1)/num_bins)]["expected_values_detected"]) < num_samples_needed_per_bin):
+    for i in range(NUM_BINS-1, -1, -1):
+        while ("final_value" not in bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)] and len(bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)]["expected_values_detected"]) < NUM_SAMPLES_NEEDED_PER_BIN):
             prob_dist = generate_probability_distribution(power)
             entropy = calculate_normalized_entropy(prob_dist)
             expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist)
@@ -215,15 +211,15 @@ def main(stdscr):
             
             # The following is for printing progress to the terminal.
             stdscr.addstr(0, 0, "Bins data sample counts:\n{}".format(pformat({k: len(v["expected_values_detected"]) if "final_value" not in v else "All samples obtained." for k, v in bins_data.items()})))
-            stdscr.addstr(num_bins + 1, 0, "Power: {}".format(power))
-            stdscr.addstr(num_bins + 2, 0, "Iterations: {}".format(num_iterations))
-            stdscr.addstr(num_bins + 3, 0, "Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
+            stdscr.addstr(NUM_BINS + 1, 0, "Power: {}".format(power))
+            stdscr.addstr(NUM_BINS + 2, 0, "Iterations: {}".format(num_iterations))
+            stdscr.addstr(NUM_BINS + 3, 0, "Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
             stdscr.refresh()  # Refresh the screen            
             
             num_iterations += 1
             num_iterations_while_loop_at_current_power += 1
 
-            all_higher_bins_done = all( "final_value" in bins_data[(j/num_bins, (j+1)/num_bins)] for j in range(i, num_bins) )            
+            all_higher_bins_done = all( "final_value" in bins_data[(j/NUM_BINS, (j+1)/NUM_BINS)] for j in range(i, NUM_BINS) )            
             if all_higher_bins_done or (num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power):     # If the higher bins have been filled or we have done more than the maximum number of while loop iterations allowed
                 power *= power_step_factor
                 num_iterations_while_loop_at_current_power = 0
