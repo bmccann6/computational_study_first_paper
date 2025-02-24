@@ -35,14 +35,8 @@ def diversity_of_expected_fraction_detected(individual):
     return (total_diff,)
 
 
-# \ici Create another module called automated_search_for_detector_prices which does a genetic algorithm.
-# And in this module, we will use the capacities we had outputted by automated_search_for_detector_prices.
-
-
-# \ici I think perhaps an issue with the entropy histogram is that its an average. So like in say low entropy states, we will 
-# basically have each of the distributions selected at random for one run. And then we average over all those runs, and we 
-# get something that just looks like the average of the expected fractions detected for each year. 
-# And also that the defender does the same strategy regardless of the year.
+\ici Create another module called automated_search_for_detector_prices which does a genetic algorithm.
+And in this module, we will use the capacities we had outputted by automated_search_for_detector_prices.
 
 
 # ---------------------------------------------
@@ -62,19 +56,12 @@ def random_capacity_in_range(cap):
     
     return random.randint(min_cap, max_cap)
 
-
-# \ici Is the reason we keep seeing larger deviations than 15% is because we do the 15% before applying the scaling factor?
-# I thought whether we did 15% before or after applying the scaling factor would not matter, but maybe it does.
-
 def init_individual(icls):
     """
     Construct one individual with each location's capacity in ±tolerance_percent_deviation_real_capacity of real value.
     """
     print(f"This is the total number of items originally: {sum(caps_normalized)}")  
     capacities = [random_capacity_in_range(caps_normalized[i]) for i in range(NUM_LOCATIONS)]
-    
-    # scaling_factor = sum(capacities) / max_num_items_across_years
-    # capacities = [cap / scaling_factor for cap in capacities]
     print(f"This is the sum of the capacities once the deviations are done and the scaling factor applied: {sum(capacities)}")
     
     return icls(capacities)
@@ -114,12 +101,12 @@ def print_final_results(best_solution_found, best_fitness):
     print("\nBest solution found:", best_solution_found)
     for (loc_name, original_cap), ga_cap in zip(sorted_locs, best_solution_found):
         print(f"Location: {loc_name}") 
-        # scaling_factor = sum(best_solution_found) / max_num_items_across_years
-        # cap = cap / scaling_factor
         print(f"Original real capacity: {original_cap} ")
+        
         scaled_original_cap = original_cap * fraction_cargo_containers_storing_drugs        
         print(f"Original real capacity but scaled by fraction_cargo_containers_storing_drugs: {scaled_original_cap}")
         print(f"GA-chosen capacity: {ga_cap}")
+        
         percent_diff = ((ga_cap - scaled_original_cap) / scaled_original_cap) * 100
         print(f"Percent difference: {percent_diff:.2f}%")
         print()
@@ -133,10 +120,8 @@ def print_final_results(best_solution_found, best_fitness):
 if __name__ == "__main__":
     
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
-    sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)
-    # sorted_locs = [(loc, cap * fraction_cargo_containers_storing_drugs) for loc, cap in sorted_locs]
-    caps_normalized = [cap * fraction_cargo_containers_storing_drugs for loc, cap in sorted_locs]    
-    
+    sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)     
+    caps_normalized = [cap * fraction_cargo_containers_storing_drugs for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.
     NUM_LOCATIONS = len(caps_normalized)
     
     best_solution_found, best_fitness = run_genetic_algorithm()
