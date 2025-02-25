@@ -5,8 +5,12 @@ from pprint import pprint, pformat
 import time
 import curses
 import argparse
+from gurobipy import Model, GRB, quicksum
 # from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
 import entropy_plot_input_variables
+
+
+\ici Do things from ici note in overleaf ``computational study for hide-and-seek paper" doc. 
 
 def validate_data():
     """Ensure the input variables are consistent."""
@@ -28,7 +32,6 @@ def calculate_normalized_entropy(prob_dist):
     nonzero_probs = probs[probs > 0]        # Only take log of non-zero entries just in case we get division by 0 errors.
     entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(num_resource_sets)
     return entropy
-
 
 # NOTE: These are the A_i values in the algorithm mathieu wrote. NOTE! They are not the expected value of items at each node i.
 def calculate_backloading_stack_values(resource_set_dict, item_vals, capacities):
@@ -82,23 +85,22 @@ def calculate_breakpoints(backloading_stack_values, capacities):
         else:
             l += 1
 
-def calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, capacities):
-    
+def calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, capacities):  
     backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, capacities)
     breakpoints = calculate_breakpoints(backloading_stack_values, capacities)    
     
-    expected_values = {}
+    expected_value_under_equilibrium_each_node = {}
     for node in range(len(backloading_stack_values)):
         relevant_indices = [
             i for i in range(len(breakpoints) - 1)
             if breakpoints[i] <= node < breakpoints[i + 1]
         ]
-        expected_values[node] = np.mean([
+        expected_value_under_equilibrium_each_node[node] = np.mean([
             backloading_stack_values[j]
             for j in range(breakpoints[relevant_indices[0]], breakpoints[relevant_indices[0] + 1])
         ])
         
-    return expected_values, breakpoints
+    return expected_value_under_equilibrium_each_node, breakpoints
 
 def compute_resource_sets_info_for_json():
     """
@@ -115,6 +117,39 @@ def compute_resource_sets_info_for_json():
         })
     return resource_sets_info
 
+def calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations):
+    expected_value_each_node_under_this_prob_dist = {i for i in range(len(hiding_locations))}
+    for year, resource_set_dict in resource_sets.items():
+        expected_value_under_equilibrium_each_node, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
+        for node in range(len(hiding_locations)):
+            expected_value_each_node_under_this_prob_dist[node] += prob_dist[year] * expected_value_under_equilibrium_each_node[node]
+
+    return expected_value_each_node_under_this_prob_dist
+
+def get_optimal_set_detectors_this_prob_dist(budget, prob_dist, resource_sets, hiding_locations, detectors):
+    expected_value_each_node_under_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
+
+    m = Model("integer_program")
+    x = m.addVars(detectors, hiding_locations, vtype=GRB.BINARY, name="x")  # Binary decision variables
+    objective = quicksum(expected_value_each_node_under_this_prob_dist[location] * (1 - detector_type["accuracy"]) * x[detector_type, location] for detector_type in detectors for location in hiding_locations)
+    m.setObjective(objective, GRB.MINIMIZE)
+
+    # Budget constraint
+    m.addConstr(quicksum(detector_type["cost"] * x[detector_type, location] for detector_type in detectors for location in hiding_locations) <= budget, "budget_constraint")
+
+    # Each item can be selected at most once across all t
+    for location in hiding_locations:
+        m.addConstr(quicksum(x[detector_type, location] for detector_type in detectors) <= 1, f"selection_constraint_{location}")
+
+    m.optimize()
+
+    for v in m.getVars():
+        if v.x > 0:
+            print(f"{v.varName}, value: {v.x}")
+    
+    3. We need to (outside of this function), calculate the expected fraction detected (using also calculate_expected_value_each_node_this_prob_dist)
+
+
 def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist):
     # We’ll collect each year’s breakpoints in a structure to save
     expected_value_detected_this_prob_dist = 0
@@ -123,6 +158,7 @@ def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_
     for year, resource_set_dict in resource_sets.items():       
         expected_value_items_each_node_this_prob_dist_specific_resource_set, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
 
+        Will need to change this (and maybe can use the function calculate_expected_value_each_node_this_prob_dist I created). Maybe I can get rid of some lines below:
         expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
         expected_total_value_this_prob_dist_specific_resource_set = sum(expected_value_items_each_node_this_prob_dist_specific_resource_set.values())
         
@@ -233,7 +269,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     # Store all runs here before/while writing them out
     json_data = []

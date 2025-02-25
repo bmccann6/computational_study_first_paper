@@ -5,11 +5,11 @@ from pprint import pprint as pprint
 import json
 # from entropy_plot_input_variables import resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies, max_num_items_across_years
 import entropy_plot_input_variables
-from create_entropy_plot import calculate_backloading_stack_values, calculate_breakpoints, calculate_expected_value_under_equilibrium_each_node
+from create_entropy_plot import calculate_expected_value_under_equilibrium_each_node
 
 
 
-def compute_expected_fraction_detected(individual):
+def compute_expected_fraction_detected_each_year(individual):
     """
     For each year, we calculate the expected fraction detected under the capacities being the variable individual from the genetic algorithm
     """
@@ -25,7 +25,7 @@ def diversity_of_expected_fraction_detected(individual):
     """
     This function returns the sum of pairwise differences among the expected_fraction_detected_each_year.
     """
-    expected_fraction_detected_each_year_dict = compute_expected_fraction_detected(individual)
+    expected_fraction_detected_each_year_dict = compute_expected_fraction_detected_each_year(individual)
     expected_fraction_detected_each_year = list(expected_fraction_detected_each_year_dict.values())    # Extract all payoff values in a list (order doesn’t matter)
     
     total_diff = 0.0
@@ -112,7 +112,7 @@ def output_final_results(best_solution_found, best_fitness):
     print("The dictionary of capacities for the best solution found:")
     pprint(best_solution_capacities_dict)
     
-    expected_fraction_detected_each_year_dict_for_best_solution_found = compute_expected_fraction_detected(best_solution_found)
+    expected_fraction_detected_each_year_dict_for_best_solution_found = compute_expected_fraction_detected_each_year(best_solution_found)
     print("expected_fraction_detected_each_year for the best individual:")
     for year, fraction in expected_fraction_detected_each_year_dict_for_best_solution_found.items():
         print(f"  {year}: {fraction:,.2f}")
@@ -120,6 +120,7 @@ def output_final_results(best_solution_found, best_fitness):
     
     output_data = {
         "best_solution_capacities": best_solution_capacities_dict,
+        "detector_accuracies": detector_accuracies,
         "expected_fraction_detected_each_year": expected_fraction_detected_each_year_dict_for_best_solution_found
     }
     
@@ -130,7 +131,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
         
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
     sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)     

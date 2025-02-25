@@ -9,7 +9,9 @@ def get_configuration(config_path):
     resource_sets = config_data["resource_sets"]
     num_resource_sets = len(resource_sets)
     hiding_locations = config_data["hiding_locations"]
-    detectors = {key: (value["quantity"], value["accuracy"]) for key, value in config_data["detectors"].items()}
+    # detectors = {key: (value["quantity"], value["accuracy"]) for key, value in config_data["detectors"].items()}
+    detectors = config_data["detectors"]
+
 
     num_items_per_year = {year: sum(resources.values()) for year, resources in resource_sets.items()}
     max_num_items_across_years = max(num_items_per_year.values())
@@ -23,6 +25,8 @@ def get_configuration(config_path):
     null_detectors_count = len(sizes_hiding_locations) - total_real_detectors
     detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)] + [0] * null_detectors_count, reverse=True)
 
+    #! Consider if we still need detector_accuracies, or if we can get rid of it now that we have the variable detectors. If so, then make sure to get rid of detector_accuracies in all files.
+
     # sizes_hiding_locations = [50, 40, 35, 20, 20, 15, 10, 5, 3, 2]       # At each index i, the size of hiding location i is the value.
     # detector_accuracies = [0.8, 0.8, 0.7, 0.5, 0.5, 0.3, 0.3, 0, 0, 0]   # Detector accuracies, given in descending order 
 
@@ -30,6 +34,6 @@ def get_configuration(config_path):
     NUM_BINS = 20
 
 
-    return item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
+    return item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
 
 # Comment out necessary things in order to do testing. Dont use real-world data for testing.
