@@ -82,7 +82,11 @@ def calculate_breakpoints(backloading_stack_values, capacities):
         else:
             l += 1
 
-def calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints):
+def calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, capacities):
+    
+    backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, capacities)
+    breakpoints = calculate_breakpoints(backloading_stack_values, capacities)    
+    
     expected_values = {}
     for node in range(len(backloading_stack_values)):
         relevant_indices = [
@@ -94,7 +98,7 @@ def calculate_expected_value_under_equilibrium_each_node(backloading_stack_value
             for j in range(breakpoints[relevant_indices[0]], breakpoints[relevant_indices[0] + 1])
         ])
         
-    return expected_values
+    return expected_values, breakpoints
 
 def compute_resource_sets_info_for_json():
     """
@@ -103,9 +107,7 @@ def compute_resource_sets_info_for_json():
     """
     resource_sets_info = []
     for year, resource_set_dict in resource_sets.items():
-        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, sizes_hiding_locations)
-        breakpoints = calculate_breakpoints(backloading_stack_values, sizes_hiding_locations)
-        expected_value_items_each_node_this_prob_dist_specific_resource_set = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)
+        expected_value_items_each_node_this_prob_dist_specific_resource_set, breakpoints = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
         resource_sets_info.append({
             "year": year,
             "breakpoints": breakpoints,
@@ -119,9 +121,7 @@ def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_
     expected_total_value_this_prob_dist = 0
 
     for year, resource_set_dict in resource_sets.items():       
-        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, sizes_hiding_locations)    
-        breakpoints = calculate_breakpoints(backloading_stack_values, sizes_hiding_locations)
-        expected_value_items_each_node_this_prob_dist_specific_resource_set = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)        
+        expected_value_items_each_node_this_prob_dist_specific_resource_set, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
 
         expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
         expected_total_value_this_prob_dist_specific_resource_set = sum(expected_value_items_each_node_this_prob_dist_specific_resource_set.values())

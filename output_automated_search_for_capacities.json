@@ -1,0 +1,35 @@
+{
+    "best_solution_capacities": {
+        "Port authority of New York and New Jersey, NY & NJ": 158485,
+        "Port of los angeles, CA": 156996,
+        "Port of long beach, CA": 148277,
+        "Port of savannah, GA": 89424,
+        "Port of houston authority of harris county, TX": 59503,
+        "Port of virginia, VA": 62006,
+        "Port of charleston, SC": 42980,
+        "Port of oakland, CA": 29763,
+        "Port of seattle, WA": 20378,
+        "Tacoma, WA": 21100,
+        "Port miami, FL": 17896,
+        "Philadelphia regional port authority, PA": 17923,
+        "Baltimore, MD": 19683,
+        "Port everglades, FL": 15290,
+        "Mobile, AL": 11263,
+        "San juan, PR": 7973,
+        "Jacksonville, FL": 8178,
+        "Wilmington, DE": 7274,
+        "Oxnard harbor district, CA": 4832,
+        "Port of new orleans, LA": 4893,
+        "Wilmington, NC": 4619,
+        "Port of gulfport, MS": 3602,
+        "South jersey port corporation, NJ": 2692
+    },
+    "expected_fraction_detected_each_year": {
+        "2017": 0.31331175773397746,
+        "2018": 0.5611292007134373,
+        "2019": 0.6630811567091851,
+        "2020": 0.33060641839842525,
+        "2021": 0.7343548571251449,
+        "2022": 0.7891999999999999
+    }
+}

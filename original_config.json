@@ -7,12 +7,48 @@
         "cannabis": 2000
     },
     "resource_sets": {
-        "2017": {"fentanyl": 2158, "heroin": 7917, "cocaine": 236966, "meth": 58013, "cannabis": 693000},
-        "2018": {"fentanyl": 2525, "heroin": 8996, "cocaine": 192080, "meth": 83341, "cannabis": 510000},
-        "2019": {"fentanyl": 4489, "heroin": 8824, "cocaine": 187018, "meth": 118284, "cannabis": 432000},
-        "2020": {"fentanyl": 8319, "heroin": 7191, "cocaine": 205354, "meth": 139989, "cannabis": 555000},
-        "2021": {"fentanyl": 12227, "heroin": 5222, "cocaine": 205354, "meth": 118473, "cannabis": 338272},
-        "2022": {"fentanyl": 16123, "heroin": 4140, "cocaine": 205354, "meth": 95793, "cannabis": 288694}
+        "2017": {
+            "fentanyl": 2158, 
+            "heroin": 7917, 
+            "cocaine": 236966, 
+            "meth": 58013, 
+            "cannabis": 693000
+        },
+        "2018": {
+            "fentanyl": 2525, 
+            "heroin": 8996, 
+            "cocaine": 192080, 
+            "meth": 83341, 
+            "cannabis": 510000
+        },
+        "2019": {
+            "fentanyl": 4489, 
+            "heroin": 8824, 
+            "cocaine": 187018, 
+            "meth": 118284, 
+            "cannabis": 432000
+        },
+        "2020": {
+            "fentanyl": 8319, 
+            "heroin": 7191, 
+            "cocaine": 205354, 
+            "meth": 139989, 
+            "cannabis": 555000
+        },
+        "2021": {
+            "fentanyl": 12227, 
+            "heroin": 5222, 
+            "cocaine": 205354, 
+            "meth": 118473, 
+            "cannabis": 338272
+        },
+        "2022": {
+            "fentanyl": 16123, 
+            "heroin": 4140, 
+            "cocaine": 205354, 
+            "meth": 95793, 
+            "cannabis": 288694
+        }
     },
     "hiding_locations": { 
         "Port authority of New York and New Jersey, NY & NJ": 5352000,
