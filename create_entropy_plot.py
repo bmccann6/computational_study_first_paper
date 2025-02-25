@@ -149,7 +149,7 @@ def get_optimal_set_detectors_this_prob_dist(budget, prob_dist, resource_sets, h
     
     3. We need to (outside of this function), calculate the expected fraction detected (using also calculate_expected_value_each_node_this_prob_dist)
 
-
+ 
 def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist):
     # We’ll collect each year’s breakpoints in a structure to save
     expected_value_detected_this_prob_dist = 0
