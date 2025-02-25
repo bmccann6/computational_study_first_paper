@@ -1,6 +1,8 @@
 import random
 from deap import base, creator, tools, algorithms
-from entropy_plot_input_variables import resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies, max_num_items_across_years
+import argparse
+# from entropy_plot_input_variables import resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies, max_num_items_across_years
+import entropy_plot_input_variables
 from create_entropy_plot import calculate_backloading_stack_values, calculate_breakpoints, calculate_expected_value_under_equilibrium_each_node
 from pprint import pprint as pprint
 
@@ -12,7 +14,7 @@ def compute_expected_fraction_detected(individual):
     """
     expected_fraction_detected_each_year = {}
     for year, resource_set_dict in resource_sets.items():    
-        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, capacities=individual)    
+        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, capacities=individual)    
         breakpoints = calculate_breakpoints(backloading_stack_values, capacities=individual)
         expected_value_items_each_node_this_year = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)       
         total_value_items_this_year = sum(expected_value_items_each_node_this_year.values())
@@ -33,10 +35,6 @@ def diversity_of_expected_fraction_detected(individual):
             total_diff += abs(expected_fraction_detected_each_year[i] - expected_fraction_detected_each_year[j])
     
     return (total_diff,)
-
-
-\ici Create another module called automated_search_for_detector_prices which does a genetic algorithm.
-And in this module, we will use the capacities we had outputted by automated_search_for_detector_prices.
 
 
 # ---------------------------------------------
@@ -99,6 +97,7 @@ def run_genetic_algorithm():
 
 def print_final_results(best_solution_found, best_fitness):
     print("\nBest solution found:", best_solution_found)
+    best_solution_capacities_dict = {}
     for (loc_name, original_cap), ga_cap in zip(sorted_locs, best_solution_found):
         print(f"Location: {loc_name}") 
         print(f"Original real capacity: {original_cap} ")
@@ -111,14 +110,24 @@ def print_final_results(best_solution_found, best_fitness):
         print(f"Percent difference: {percent_diff:.2f}%")
         print()
         
+        best_solution_capacities_dict[loc_name] = ga_cap
+        
+    print("The dictionary of capacities for the best solution found:")
+    pprint(best_solution_capacities_dict)
+    
     expected_fraction_detected_each_year_dict_for_best_solution_found = compute_expected_fraction_detected(best_solution_found)
     print("expected_fraction_detected_each_year for the best individual:")
     for year, fraction in expected_fraction_detected_each_year_dict_for_best_solution_found.items():
         print(f"  {year}: {fraction:,.2f}")
     print(f"Best diversity (sum of pairwise payoff differences): {best_fitness:,.2f}")   
         
+        
 if __name__ == "__main__":
-    
+    parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
+    parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
+    args = parser.parse_args()
+    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+        
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
     sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)     
     caps_normalized = [cap * fraction_cargo_containers_storing_drugs for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.

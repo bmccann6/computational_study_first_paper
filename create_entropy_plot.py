@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 from pprint import pprint, pformat
 import time
 import curses
-from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
-
+import argparse
+# from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
+import entropy_plot_input_variables
 
 def validate_data():
     """Ensure the input variables are consistent."""
@@ -30,7 +31,7 @@ def calculate_normalized_entropy(prob_dist):
 
 
 # NOTE: These are the A_i values in the algorithm mathieu wrote. NOTE! They are not the expected value of items at each node i.
-def calculate_backloading_stack_values(resource_set_dict, capacities=sizes_hiding_locations):
+def calculate_backloading_stack_values(resource_set_dict, item_vals, capacities):
     hider_resources_sorted = sorted(resource_set_dict.items(), key=lambda x: item_vals[x[0]])
     local_copy_capacities = capacities.copy()          # We make a local copy because we will be modifying the sizes of the hiding locations as we fill them up. But we don't want to change capacities because we need that in later calls.
     backloading_stack_values = {i: 0 for i in range(len(capacities))}
@@ -55,7 +56,7 @@ def calculate_backloading_stack_values(resource_set_dict, capacities=sizes_hidin
         
     return backloading_stack_values
 
-def calculate_breakpoints(backloading_stack_values, capacities=sizes_hiding_locations):
+def calculate_breakpoints(backloading_stack_values, capacities):
     n = len(capacities)
     i_0 = 0
     l = 0
@@ -102,8 +103,8 @@ def compute_resource_sets_info_for_json():
     """
     resource_sets_info = []
     for year, resource_set_dict in resource_sets.items():
-        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict)
-        breakpoints = calculate_breakpoints(backloading_stack_values)
+        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, sizes_hiding_locations)
+        breakpoints = calculate_breakpoints(backloading_stack_values, sizes_hiding_locations)
         expected_value_items_each_node_this_prob_dist_specific_resource_set = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)
         resource_sets_info.append({
             "year": year,
@@ -118,8 +119,8 @@ def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_
     expected_total_value_this_prob_dist = 0
 
     for year, resource_set_dict in resource_sets.items():       
-        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict)    
-        breakpoints = calculate_breakpoints(backloading_stack_values)
+        backloading_stack_values = calculate_backloading_stack_values(resource_set_dict, item_vals, sizes_hiding_locations)    
+        breakpoints = calculate_breakpoints(backloading_stack_values, sizes_hiding_locations)
         expected_value_items_each_node_this_prob_dist_specific_resource_set = calculate_expected_value_under_equilibrium_each_node(backloading_stack_values, breakpoints)        
 
         expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
@@ -228,10 +229,16 @@ def main(stdscr):
 
 
 if __name__=="__main__":
+
+    parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
+    parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
+    args = parser.parse_args()
+    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+
     # Store all runs here before/while writing them out
     json_data = []
     bins_at_end = curses.wrapper(main)
-    
+
     print("Creating json...")
     with open("breaking_indices_log.json", "w") as f:
         json.dump(json_data, f, indent=4)    
