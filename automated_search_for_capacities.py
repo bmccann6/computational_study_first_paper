@@ -17,7 +17,7 @@ def compute_expected_fraction_detected_each_year(individual):
     for year, resource_set_dict in resource_sets.items():    
         expected_value_items_each_node_this_year, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, capacities=individual)  
         total_value_items_this_year = sum(expected_value_items_each_node_this_year.values())
-        expected_fraction_detected_each_year[year] = sum(detector_accuracies[i] * expected_value_items_each_node_this_year[i] for i in range(len(expected_value_items_each_node_this_year))) / total_value_items_this_year      
+        expected_fraction_detected_each_year[year] = sum(dummy_detector_accuracies[i] * expected_value_items_each_node_this_year[i] for i in range(len(expected_value_items_each_node_this_year))) / total_value_items_this_year      
         
     return expected_fraction_detected_each_year
 
@@ -120,19 +120,21 @@ def output_final_results(best_solution_found, best_fitness):
     
     output_data = {
         "best_solution_capacities": best_solution_capacities_dict,
-        "detector_accuracies": detector_accuracies,
+        "dummy_detector_accuracies": dummy_detector_accuracies,
         "expected_fraction_detected_each_year": expected_fraction_detected_each_year_dict_for_best_solution_found
     }
     
     with open('output_automated_search_for_capacities.json', 'w') as json_file:
         json.dump(output_data, json_file, indent=4)        
         
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
-        
+    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+
+    dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * 14
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
     sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)     
     caps_normalized = [cap * fraction_cargo_containers_storing_drugs for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.

@@ -10,13 +10,8 @@ from gurobipy import Model, GRB, quicksum
 import entropy_plot_input_variables
 
 
-\ici Do things from ici note in overleaf ``computational study for hide-and-seek paper" doc. 
-
 def validate_data():
     """Ensure the input variables are consistent."""
-    if len(sizes_hiding_locations) != len(detector_accuracies):
-        raise ValueError("sizes_hiding_locations and detector_accuracies must have the same length")
-
     for year, drugs in resource_sets.items():
         for drug in drugs:
             if drug not in item_vals:
@@ -146,26 +141,43 @@ def get_optimal_set_detectors_this_prob_dist(budget, prob_dist, resource_sets, h
     for v in m.getVars():
         if v.x > 0:
             print(f"{v.varName}, value: {v.x}")
+            
+    optimal_solution = {v.varName: v.x for v in m.getVars() if v.x > 0}
+    return optimal_solution
     
-    3. We need to (outside of this function), calculate the expected fraction detected (using also calculate_expected_value_each_node_this_prob_dist)
+def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget):
+    
+    expected_value_each_node_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
+    optimal_set_detectors_this_prob_dist = get_optimal_set_detectors_this_prob_dist(budget, prob_dist, resource_sets, hiding_locations, detectors)
+    
+    
+    # Convert dictionary to list and include accuracy for sorting
+    solution_list = [(key.split('[')[0], detectors[key.split('[')[0]]['accuracy'], value) 
+                       for key, value in optimal_set_detectors_this_prob_dist.items() if value > 0]
 
+    # Sort by accuracy
+    sorted_optimal_detectors_this_prob_dist = sorted(solution_list, key=lambda x: x[1], reverse=True)
  
-def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist):
-    # We’ll collect each year’s breakpoints in a structure to save
-    expected_value_detected_this_prob_dist = 0
-    expected_total_value_this_prob_dist = 0
-
-    for year, resource_set_dict in resource_sets.items():       
-        expected_value_items_each_node_this_prob_dist_specific_resource_set, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
-
-        Will need to change this (and maybe can use the function calculate_expected_value_each_node_this_prob_dist I created). Maybe I can get rid of some lines below:
-        expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
-        expected_total_value_this_prob_dist_specific_resource_set = sum(expected_value_items_each_node_this_prob_dist_specific_resource_set.values())
-        
-        expected_value_detected_this_prob_dist += prob_dist[year] * expected_value_detected_this_prob_dist_specific_resource_set
-        expected_total_value_this_prob_dist += prob_dist[year] * expected_total_value_this_prob_dist_specific_resource_set
-
+    expected_value_detected_this_prob_dist = sum(sorted_optimal_detectors_this_prob_dist[i] * expected_value_each_node_this_prob_dist[i] for i in range(len(expected_value_each_node_this_prob_dist)))
+    expected_total_value_this_prob_dist = sum(expected_value_each_node_this_prob_dist.values())
+    
     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
+
+# def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist):
+#     expected_value_detected_this_prob_dist = 0
+#     expected_total_value_this_prob_dist = 0
+
+#     for year, resource_set_dict in resource_sets.items():       
+#         expected_value_items_each_node_this_prob_dist_specific_resource_set, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
+
+#         Will need to change this (and maybe can use the function calculate_expected_value_each_node_this_prob_dist I created). Maybe I can get rid of some lines below:
+#         expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
+#         expected_total_value_this_prob_dist_specific_resource_set = sum(expected_value_items_each_node_this_prob_dist_specific_resource_set.values())
+        
+#         expected_value_detected_this_prob_dist += prob_dist[year] * expected_value_detected_this_prob_dist_specific_resource_set
+#         expected_total_value_this_prob_dist += prob_dist[year] * expected_total_value_this_prob_dist_specific_resource_set
+
+#     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
 
 def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist):
     """
@@ -240,7 +252,7 @@ def main(stdscr):
         while ("final_value" not in bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)] and len(bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)]["expected_values_detected"]) < NUM_SAMPLES_NEEDED_PER_BIN):
             prob_dist = generate_probability_distribution(power)
             entropy = calculate_normalized_entropy(prob_dist)
-            expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist)
+            expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget)
             bins_data = update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist)
  
             # Log just prob_dist and entropy each iteration
@@ -269,7 +281,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     # Store all runs here before/while writing them out
     json_data = []

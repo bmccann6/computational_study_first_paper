@@ -11,6 +11,7 @@ def get_configuration(config_path):
     hiding_locations = config_data["hiding_locations"]
     # detectors = {key: (value["quantity"], value["accuracy"]) for key, value in config_data["detectors"].items()}
     detectors = config_data["detectors"]
+    budget = config_data["budget"]
 
 
     num_items_per_year = {year: sum(resources.values()) for year, resources in resource_sets.items()}
@@ -21,9 +22,9 @@ def get_configuration(config_path):
 
     #NOTE: Once we have found good values for the capacities, then change sizes_hiding_locations here so that in create_entropy_plot, we use the capacities we found.
     sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
-    total_real_detectors = sum(count for count, _ in detectors.values())
-    null_detectors_count = len(sizes_hiding_locations) - total_real_detectors
-    detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)] + [0] * null_detectors_count, reverse=True)
+    # total_real_detectors = sum(count for count, _ in detectors.values())
+    # null_detectors_count = len(sizes_hiding_locations) - total_real_detectors
+    # detector_accuracies = sorted([accuracy for count, accuracy in detectors.values() for _ in range(count)] + [0] * null_detectors_count, reverse=True)
 
     #! Consider if we still need detector_accuracies, or if we can get rid of it now that we have the variable detectors. If so, then make sure to get rid of detector_accuracies in all files.
 
@@ -34,6 +35,7 @@ def get_configuration(config_path):
     NUM_BINS = 20
 
 
-    return item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
+    return item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, \
+            detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
 
 # Comment out necessary things in order to do testing. Dont use real-world data for testing.
