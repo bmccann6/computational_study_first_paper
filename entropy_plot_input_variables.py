@@ -22,7 +22,7 @@ def get_configuration(config_path):
     #NOTE: Once we have found good values for the capacities, then change sizes_hiding_locations here so that in create_entropy_plots, we use the capacities we found.
     sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
 
-    NUM_SAMPLES_NEEDED_PER_BIN = 10
+    NUM_SAMPLES_NEEDED_PER_BIN = 100
     NUM_BINS = 20
 
     return item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, \
