@@ -8,7 +8,7 @@
             "name": "Original configuration file",
             "type": "debugpy",
             "request": "launch",
-            "program": "create_entropy_plot.py",
+            "program": "create_entropy_plots.py",
             "console": "integratedTerminal",
             "args": ["-config", "original_config.json"]
         }

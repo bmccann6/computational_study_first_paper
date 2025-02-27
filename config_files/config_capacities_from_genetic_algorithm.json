@@ -78,15 +78,15 @@
     "detectors": { 
         "German sheperd": {
             "accuracy": 0.868,
-            "cost": 100000
+            "cost": 150000
         },
         "English cocker spaniel": {
             "accuracy": 0.82,
-            "cost": 90000
+            "cost": 135000
         },
         "Labrador retriver": {
             "accuracy": 0.788,
-            "cost": 80000
+            "cost": 120000
         },
         "Terrier": {
             "accuracy": 0.67,
@@ -105,5 +105,5 @@
             "cost": 55000
         }
     },
-    "budget": 1000000
+    "budget": 625000
 }

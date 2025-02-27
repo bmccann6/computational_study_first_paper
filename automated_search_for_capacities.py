@@ -5,7 +5,7 @@ from pprint import pprint as pprint
 import json
 # from entropy_plot_input_variables import resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies, max_num_items_across_years
 import entropy_plot_input_variables
-from create_entropy_plot import calculate_expected_value_under_equilibrium_each_node
+from create_entropy_plots import calculate_expected_value_under_equilibrium_each_node
 
 
 
@@ -132,9 +132,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
-    dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * 14
+    dummy_real_detectors= [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] 
+    dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * (NUM_HIDING_LOCATIONS - len(dummy_real_detectors))
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
     sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)     
     caps_normalized = [cap * fraction_cargo_containers_storing_drugs for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.

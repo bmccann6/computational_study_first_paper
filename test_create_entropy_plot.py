@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from create_entropy_plot import (error_checking, 
+from create_entropy_plots import (error_checking, 
                                  generate_probabilities, 
                                  calculate_entropy, 
                                  calculate_A_i_values, 

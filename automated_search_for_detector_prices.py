@@ -1,7 +1,7 @@
 from gurobipy import Model, GRB
 import argparse
 import entropy_plot_input_variables
-from create_entropy_plot import calculate_expected_value_under_equilibrium_each_node
+from create_entropy_plots import calculate_expected_value_under_equilibrium_each_node
 
 
 # def calculate_expected_value_under_equilibrium_each_node():
@@ -57,7 +57,8 @@ def main():
     3. 
   
 What is the objective of the genetic algorithm? What is trying to do? 
-   
+
+\ici Just look at ici comment in overleaf doc first before trying to do this module
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")

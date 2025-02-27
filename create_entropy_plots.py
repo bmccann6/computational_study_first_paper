@@ -113,52 +113,53 @@ def compute_resource_sets_info_for_json():
     return resource_sets_info
 
 def calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations):
-    expected_value_each_node_under_this_prob_dist = {i for i in range(len(hiding_locations))}
+    expected_value_each_node_under_this_prob_dist = {i: 0 for i in range(len(hiding_locations))}
     for year, resource_set_dict in resource_sets.items():
         expected_value_under_equilibrium_each_node, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
         for node in range(len(hiding_locations)):
             expected_value_each_node_under_this_prob_dist[node] += prob_dist[year] * expected_value_under_equilibrium_each_node[node]
-
+            
     return expected_value_each_node_under_this_prob_dist
 
-def get_optimal_set_detectors_this_prob_dist(budget, prob_dist, resource_sets, hiding_locations, detectors):
-    expected_value_each_node_under_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
+def get_optimal_list_detectors_this_prob_dist(budget, NUM_HIDING_LOCATIONS, detectors, expected_value_each_node_under_this_prob_dist):
+    # expected_value_each_node_under_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
+
+    nodes = range(NUM_HIDING_LOCATIONS)
 
     m = Model("integer_program")
-    x = m.addVars(detectors, hiding_locations, vtype=GRB.BINARY, name="x")  # Binary decision variables
-    objective = quicksum(expected_value_each_node_under_this_prob_dist[location] * (1 - detector_type["accuracy"]) * x[detector_type, location] for detector_type in detectors for location in hiding_locations)
-    m.setObjective(objective, GRB.MINIMIZE)
+    x = m.addVars(detectors, nodes, vtype=GRB.BINARY, name="x")  # Binary decision variables
+    objective = quicksum(expected_value_each_node_under_this_prob_dist[node] * detectors[detector_type]["accuracy"] * x[detector_type, node] for detector_type in detectors for node in nodes)
+    m.setObjective(objective, GRB.MAXIMIZE)
 
     # Budget constraint
-    m.addConstr(quicksum(detector_type["cost"] * x[detector_type, location] for detector_type in detectors for location in hiding_locations) <= budget, "budget_constraint")
+    m.addConstr(quicksum(detectors[detector_type]["cost"] * x[detector_type, node] for detector_type in detectors for node in nodes) <= budget, "budget_constraint")
 
     # Each item can be selected at most once across all t
-    for location in hiding_locations:
-        m.addConstr(quicksum(x[detector_type, location] for detector_type in detectors) <= 1, f"selection_constraint_{location}")
+    for node in nodes:
+        m.addConstr(quicksum(x[detector_type, node] for detector_type in detectors) <= 1, f"selection_constraint_{node}")
 
     m.optimize()
-
-    for v in m.getVars():
-        if v.x > 0:
-            print(f"{v.varName}, value: {v.x}")
             
-    optimal_solution = {v.varName: v.x for v in m.getVars() if v.x > 0}
-    return optimal_solution
+    # Create list of tuples with (detector_type_name, accuracy, x_value)
+    optimal_list_detectors_this_prob_dist = [(detector_type, detectors[detector_type]['accuracy'])
+                                                for detector_type in detectors for node in nodes if x[detector_type, node].x > 0 ]
+    
+    
+    
+    return optimal_list_detectors_this_prob_dist
     
 def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget):
     
     expected_value_each_node_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
-    optimal_set_detectors_this_prob_dist = get_optimal_set_detectors_this_prob_dist(budget, prob_dist, resource_sets, hiding_locations, detectors)
+    optimal_list_detectors_this_prob_dist = get_optimal_list_detectors_this_prob_dist(budget, NUM_HIDING_LOCATIONS, detectors, expected_value_each_node_this_prob_dist)
     
+    print("\nThis is optimal_list_detectors_this_prob_dist:")
+    pprint(optimal_list_detectors_this_prob_dist)
     
-    # Convert dictionary to list and include accuracy for sorting
-    solution_list = [(key.split('[')[0], detectors[key.split('[')[0]]['accuracy'], value) 
-                       for key, value in optimal_set_detectors_this_prob_dist.items() if value > 0]
-
-    # Sort by accuracy
-    sorted_optimal_detectors_this_prob_dist = sorted(solution_list, key=lambda x: x[1], reverse=True)
+    detector_accuracies = sorted([accuracy for _, accuracy in optimal_list_detectors_this_prob_dist], reverse=True) + [0] * (NUM_HIDING_LOCATIONS - len(optimal_list_detectors_this_prob_dist))     # We sort the detector accuracies just in case (probably not needed because the way the MIP works but whatever), and then add any remaining null-detectors to ensure the number of detectors we have is equal to the number of hiding locations (makes the code easier later if we require that)
+    print(f"This is detector_accuracies: {detector_accuracies}")
  
-    expected_value_detected_this_prob_dist = sum(sorted_optimal_detectors_this_prob_dist[i] * expected_value_each_node_this_prob_dist[i] for i in range(len(expected_value_each_node_this_prob_dist)))
+    expected_value_detected_this_prob_dist = sum(detector_accuracies[i] * expected_value_each_node_this_prob_dist[i] for i in range(len(expected_value_each_node_this_prob_dist)))
     expected_total_value_this_prob_dist = sum(expected_value_each_node_this_prob_dist.values())
     
     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
@@ -183,15 +184,15 @@ def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, 
     """
     For the bin containing 'entropy', append the given sample to its lists,
     and if the bin has reached the required number of samples, compute the
-    final value and store it in the 'final_value' key.
+    final value and store it in the 'final_fraction_value_detected' key.
     """
     for (lower_bound, upper_bound), bin_data in bins_data.items():
         # Skip bins that do not include the current entropy
         if not (lower_bound <= entropy < upper_bound):
             continue
         
-        # If 'final_value' is already computed, we do nothing for this bin
-        if "final_value" in bin_data:
+        # If 'final_fraction_value_detected' is already computed, we do nothing for this bin
+        if "final_fraction_value_detected" in bin_data:
             break  # Because we found our bin, no need to continue iterating
         
         # Collect new sample
@@ -202,30 +203,56 @@ def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, 
         if len(bin_data["expected_values_detected"]) == NUM_SAMPLES_NEEDED_PER_BIN:
             total_detected = sum(bin_data["expected_values_detected"])
             total_all = sum(bin_data["expected_total_values"])
-            bin_data["final_value"] = total_detected / total_all
+            bin_data["final_fraction_value_detected"] = total_detected / total_all
+            bin_data["final_expected_value_detected"] = total_detected / NUM_SAMPLES_NEEDED_PER_BIN
             
         break
 
     return bins_data
 
-def plot_entropy_chart(bins_data):
+def plot_entropy_vs_final_fraction_value_detected(bins_data):
     """
     Plot the (final) fraction detected as a function of entropy bins.
     """
         
     x_labels = [f"{k[0]:.2f}-{k[1]:.2f}" for k in bins_data]
-    y_values = [bins_data[k]["final_value"] for k in bins_data]
+    y_values = [bins_data[k]["final_fraction_value_detected"] for k in bins_data]
 
     y_min = np.floor(min(y_values) * 100) / 100
 
+    plt.figure(figsize=(15, 8)) 
+    plt.title("Entropy vs. Fraction Detected", fontsize=14)
     plt.bar(x_labels, y_values)
-    plt.xticks(rotation=45)
+    plt.xticks(rotation=45, fontsize=11)
     plt.xlabel("\nEntropy Bins", fontsize=14)
     plt.ylabel("Average Fraction Detected\n", fontsize=14)
-    plt.title("Entropy vs. Fraction Detected")
-    plt.ylim(y_min)
-    plt.savefig("entropy_vs_fraction_detected.png")
-    plt.show()
+    plt.yticks(fontsize=11)
+    plt.ylim(bottom=y_min)
+    plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
+    plt.savefig("entropy_plots/fraction_detected_plots/entropy_vs_fraction_detected.png")
+    # plt.show()
+
+def plot_entropy_vs_final_expected_value_detected(bins_data):
+    """
+    Plot the (final) expected value detected as a function of entropy bins.
+    """
+        
+    x_labels = [f"{k[0]:.2f}-{k[1]:.2f}" for k in bins_data]
+    y_values = [bins_data[k]["final_expected_value_detected"] for k in bins_data]
+
+    y_min = np.floor(min(y_values) * 100) / 100
+
+    plt.figure(figsize=(15, 8)) 
+    plt.title("Entropy vs. Expected Value Detected", fontsize=14)
+    plt.bar(x_labels, y_values)
+    plt.xticks(rotation=45, fontsize=11)
+    plt.xlabel("\nEntropy Bins", fontsize=14)
+    plt.ylabel("Average Value Detected\n", fontsize=14)
+    plt.yticks(fontsize=11)
+    plt.ylim(bottom=y_min)
+    plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
+    plt.savefig("entropy_plots/value_detected_plots/entropy_vs_value_detected.png")
+    # plt.show()
 
 def main(stdscr):
     # Clear screen
@@ -249,7 +276,7 @@ def main(stdscr):
  
         
     for i in range(NUM_BINS-1, -1, -1):
-        while ("final_value" not in bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)] and len(bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)]["expected_values_detected"]) < NUM_SAMPLES_NEEDED_PER_BIN):
+        while ("final_fraction_value_detected" not in bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)] and len(bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)]["expected_values_detected"]) < NUM_SAMPLES_NEEDED_PER_BIN):
             prob_dist = generate_probability_distribution(power)
             entropy = calculate_normalized_entropy(prob_dist)
             expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget)
@@ -259,7 +286,7 @@ def main(stdscr):
             json_data.append({"prob_dist": prob_dist, "entropy": entropy})
             
             # The following is for printing progress to the terminal.
-            stdscr.addstr(0, 0, "Bins data sample counts:\n{}".format(pformat({k: len(v["expected_values_detected"]) if "final_value" not in v else "All samples obtained." for k, v in bins_data.items()})))
+            stdscr.addstr(0, 0, "Bins data sample counts:\n{}".format(pformat({k: len(v["expected_values_detected"]) if "final_fraction_value_detected" not in v else "All samples obtained." for k, v in bins_data.items()})))
             stdscr.addstr(NUM_BINS + 1, 0, "Power: {}".format(power))
             stdscr.addstr(NUM_BINS + 2, 0, "Iterations: {}".format(num_iterations))
             stdscr.addstr(NUM_BINS + 3, 0, "Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
@@ -268,7 +295,7 @@ def main(stdscr):
             num_iterations += 1
             num_iterations_while_loop_at_current_power += 1
 
-            all_higher_bins_done = all( "final_value" in bins_data[(j/NUM_BINS, (j+1)/NUM_BINS)] for j in range(i, NUM_BINS) )            
+            all_higher_bins_done = all( "final_fraction_value_detected" in bins_data[(j/NUM_BINS, (j+1)/NUM_BINS)] for j in range(i, NUM_BINS) )            
             if all_higher_bins_done or (num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power):     # If the higher bins have been filled or we have done more than the maximum number of while loop iterations allowed
                 power *= power_step_factor
                 num_iterations_while_loop_at_current_power = 0
@@ -281,15 +308,16 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     # Store all runs here before/while writing them out
     json_data = []
     bins_at_end = curses.wrapper(main)
 
     print("Creating json...")
-    with open("breaking_indices_log.json", "w") as f:
+    with open("breaking_indices_jsons/breaking_indices_log.json", "w") as f:
         json.dump(json_data, f, indent=4)    
     print("Finished creating json.")
     
-    plot_entropy_chart(bins_at_end)
+    plot_entropy_vs_final_fraction_value_detected(bins_at_end)
+    plot_entropy_vs_final_expected_value_detected(bins_at_end) 
