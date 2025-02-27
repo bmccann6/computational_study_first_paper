@@ -11,7 +11,7 @@ def main():
         config = json.load(f)
     
     # Iterate over some budgets
-    for budget in [525000, 575000, 625000, 775000, 850000, 875000, 900000]:
+    for budget in [500000]:
         print(f"Running for budget: {budget}")
         # <-- Modified: Update the budget value in the config
         config["budget"] = budget

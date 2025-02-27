@@ -5,6 +5,7 @@ from pprint import pprint, pformat
 import time
 import curses
 import argparse
+from matplotlib.ticker import FuncFormatter
 from gurobipy import Model, GRB, quicksum
 # from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
 import entropy_plot_input_variables
@@ -221,7 +222,7 @@ def plot_entropy_vs_final_fraction_value_detected(bins_data):
     y_min = np.floor(min(y_values) * 100) / 100
 
     plt.figure(figsize=(15, 8)) 
-    plt.title("Entropy vs. Fraction Detected", fontsize=14)
+    plt.title("Normalized Entropy vs. Fraction Detected", fontsize=14)
     plt.bar(x_labels, y_values)
     plt.xticks(rotation=45, fontsize=11)
     plt.xlabel("\nEntropy Bins", fontsize=14)
@@ -239,17 +240,38 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
         
     x_labels = [f"{k[0]:.2f}-{k[1]:.2f}" for k in bins_data]
     y_values = [bins_data[k]["final_expected_value_detected"] for k in bins_data]
+    
+    data_range = max(y_values) - min(y_values)
+    y_axis_buffer_adjust_amount = data_range * 0.05      # This will be used for the y ticks to ensure that there isn't a bar going to the top y-tick. Its just for presentation sake.
 
-    y_min = np.floor(min(y_values) * 100) / 100
+    y_min = min(y_values) - y_axis_buffer_adjust_amount
+    y_max = max(y_values) + y_axis_buffer_adjust_amount
 
+    # Calculate the y-ticks to include a tick at the min and max, and evenly spaced in between
+    num_ticks = 10  # Define number of ticks you want (including min and max)
+    y_ticks = np.linspace(y_min, y_max, num_ticks)
+        
+    def format_y_value(y, pos):
+        if y >= 1e9:
+            return f'${y/1e9:.2f}B'
+        elif y >= 1e6:
+            return f'${y/1e6:.2f}M'
+        elif y >= 1e3:
+            return f'${y/1e3:.2f}K'
+        return f'${y:.2f}'
+    
     plt.figure(figsize=(15, 8)) 
-    plt.title("Entropy vs. Expected Value Detected", fontsize=14)
+    plt.title("Normalized Entropy vs. Expected Value Detected (in billions USD)", fontsize=14)
     plt.bar(x_labels, y_values)
     plt.xticks(rotation=45, fontsize=11)
     plt.xlabel("\nEntropy Bins", fontsize=14)
     plt.ylabel("Average Value Detected\n", fontsize=14)
-    plt.yticks(fontsize=11)
-    plt.ylim(bottom=y_min)
+    plt.yticks(y_ticks, [format_y_value(y, None) for y in y_ticks], fontsize=11)  # Using the formatter for the labels
+    
+    formatter = FuncFormatter(format_y_value)
+    plt.gca().yaxis.set_major_formatter(formatter)    
+    
+    plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
     plt.savefig("entropy_plots/value_detected_plots/entropy_vs_value_detected.png")
     # plt.show()
