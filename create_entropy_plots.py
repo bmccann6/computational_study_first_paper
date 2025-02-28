@@ -295,7 +295,7 @@ def main(stdscr):
     start_time = time.time()
     validate_data()
     power = 1
-    power_step_factor = 1.5        # From experimenting, I found that this value makes the code run decently fast
+    power_step_factor = 1.25        # From experimenting, I found that this value makes the code run decently fast
     bins_data = {(i/NUM_BINS, (i+1)/NUM_BINS): {"expected_values_detected": [], "expected_total_values": []} for i in range(NUM_BINS)}
     max_num_while_loop_iterations_before_increasing_power = NUM_SAMPLES_NEEDED_PER_BIN * NUM_BINS
     num_iterations_while_loop_at_current_power = 0
