@@ -99,8 +99,8 @@ def output_final_results(best_solution_found, best_fitness):
         print(f"Location: {loc_name}") 
         print(f"Original real capacity: {original_cap} ")
         
-        scaled_original_cap = original_cap * fraction_cargo_containers_storing_drugs        
-        print(f"Original real capacity but scaled by fraction_cargo_containers_storing_drugs: {scaled_original_cap}")
+        scaled_original_cap = original_cap * fraction_cargo_containers_storing_drugs_max_year        
+        print(f"Original real capacity but scaled by fraction_cargo_containers_storing_drugs_max_year: {scaled_original_cap}")
         print(f"GA-chosen capacity: {ga_cap}")
         
         percent_diff = ((ga_cap - scaled_original_cap) / scaled_original_cap) * 100
@@ -132,14 +132,28 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     dummy_real_detectors= [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] 
     dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * (NUM_HIDING_LOCATIONS - len(dummy_real_detectors))
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that cna be taken
     sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)     
-    caps_normalized = [cap * fraction_cargo_containers_storing_drugs for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.
+    
+    #* We will just get the fraction of cargo containers storing drugs for whatever year is the maximum for simplicity. Really, it doesn't matter for this. It could be any year. We just want to see how changing the capacities affects things for a search.
+    num_items_per_year = {year: sum(resources.values()) for year, resources in resource_sets.items()} 
+    max_num_items_across_years = max(num_items_per_year.values())
+    total_original_capacity = sum(hiding_locations.values())
+    fraction_cargo_containers_storing_drugs_max_year = max_num_items_across_years/total_original_capacity
+        
+    caps_normalized = [cap * fraction_cargo_containers_storing_drugs_max_year for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.
     NUM_LOCATIONS = len(caps_normalized)
+ 
+ 
+ 
+
+    
+    
+    
     
     best_solution_found, best_fitness = run_genetic_algorithm()
     output_final_results(best_solution_found, best_fitness)

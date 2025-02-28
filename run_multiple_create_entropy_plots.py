@@ -11,7 +11,7 @@ def main():
         config = json.load(f)
     
     # Iterate over some budgets
-    for budget in [500000]:
+    for budget in range(100000, 2300000 + 1, 25000):
         print(f"Running for budget: {budget}")
         # <-- Modified: Update the budget value in the config
         config["budget"] = budget
@@ -47,5 +47,5 @@ if __name__ == "__main__":
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
     
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
     main()

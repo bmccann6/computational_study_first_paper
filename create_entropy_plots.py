@@ -7,7 +7,7 @@ import curses
 import argparse
 from matplotlib.ticker import FuncFormatter
 from gurobipy import Model, GRB, quicksum
-# from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
+# from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
 import entropy_plot_input_variables
 
 
@@ -105,7 +105,7 @@ def compute_resource_sets_info_for_json():
     """
     resource_sets_info = []
     for year, resource_set_dict in resource_sets.items():
-        expected_value_items_each_node_this_prob_dist_specific_resource_set, breakpoints = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
+        expected_value_items_each_node_this_prob_dist_specific_resource_set, breakpoints = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year[year])
         resource_sets_info.append({
             "year": year,
             "breakpoints": breakpoints,
@@ -116,7 +116,7 @@ def compute_resource_sets_info_for_json():
 def calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations):
     expected_value_each_node_under_this_prob_dist = {i: 0 for i in range(len(hiding_locations))}
     for year, resource_set_dict in resource_sets.items():
-        expected_value_under_equilibrium_each_node, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
+        expected_value_under_equilibrium_each_node, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year[year])
         for node in range(len(hiding_locations)):
             expected_value_each_node_under_this_prob_dist[node] += prob_dist[year] * expected_value_under_equilibrium_each_node[node]
             
@@ -170,7 +170,7 @@ def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_
 #     expected_total_value_this_prob_dist = 0
 
 #     for year, resource_set_dict in resource_sets.items():       
-#         expected_value_items_each_node_this_prob_dist_specific_resource_set, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
+#         expected_value_items_each_node_this_prob_dist_specific_resource_set, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year)
 
 #         Will need to change this (and maybe can use the function calculate_expected_value_each_node_this_prob_dist I created). Maybe I can get rid of some lines below:
 #         expected_value_detected_this_prob_dist_specific_resource_set = sum(detector_accuracies[i] * expected_value_items_each_node_this_prob_dist_specific_resource_set[i] for i in range(len(expected_value_items_each_node_this_prob_dist_specific_resource_set)))        
@@ -229,7 +229,7 @@ def plot_entropy_vs_final_fraction_value_detected(bins_data):
     y_ticks = np.linspace(y_min, y_max, num_ticks)
 
     def format_y_value(y, pos):
-        return f'{y:.2f}'
+        return f'{y:.4f}'
     
     plt.figure(figsize=(15, 8)) 
     plt.title("Normalized Entropy vs. Fraction Detected", fontsize=14)
@@ -337,12 +337,23 @@ def main(stdscr):
     return bins_data
 
 
+
+
+# \ici
+# Then make a separate script which generates probability distributions and saves them in a json or pickle file. 
+# Getting distributions which fit into entropy bins is the longest part. 
+# Once we have a set though, then we can just run the rest of the code and budget mip for each of those created distributions.
+# So, move generate_probability_distribution and the stdscr stuff into another module, and call that module. 
+# And change around create_entropy_plots.py accordingly, like the while-loop in main or stuff like that. 
+# And then check if I need to change around my other modules.
+
+
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, fraction_cargo_containers_storing_drugs, sizes_hiding_locations, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     # Store all runs here before/while writing them out
     json_data = []

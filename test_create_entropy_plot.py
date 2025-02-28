@@ -29,7 +29,7 @@ np.random.seed(0)
 # )
 # 
 # And assume the following variables are defined in entropy_plot_input_variables:
-# item_values, resource_sets, sizes_hiding_locations, detector_accuracies, required_num_samples_per_bin
+# item_values, resource_sets, sizes_hiding_locations_each_year, detector_accuracies, required_num_samples_per_bin
 #x
 # For our tests below we’ll use small dummy inputs where appropriate.
 
