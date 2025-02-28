@@ -23,7 +23,7 @@ def get_configuration(config_path):
     # sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
     sizes_hiding_locations_each_year = {year: [int(size * num_items_per_year[year]/total_original_capacity) for size in sorted(hiding_locations.values(), reverse=True)]  for year in resource_sets.keys()}       # At each index i of a year, the size of hiding location i is the value.
 
-    NUM_SAMPLES_NEEDED_PER_BIN = 2
+    NUM_SAMPLES_NEEDED_PER_BIN = 100
     NUM_BINS = 20
 
     return item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, \

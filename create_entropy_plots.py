@@ -339,13 +339,13 @@ def main(stdscr):
 
 
 
-# \ici
-# Then make a separate script which generates probability distributions and saves them in a json or pickle file. 
-# Getting distributions which fit into entropy bins is the longest part. 
-# Once we have a set though, then we can just run the rest of the code and budget mip for each of those created distributions.
-# So, move generate_probability_distribution and the stdscr stuff into another module, and call that module. 
-# And change around create_entropy_plots.py accordingly, like the while-loop in main or stuff like that. 
-# And then check if I need to change around my other modules.
+\ici
+Then make a separate script which generates probability distributions and saves them in a json or pickle file. 
+Getting distributions which fit into entropy bins is the longest part. 
+Once we have a set though, then we can just run the rest of the code and budget mip for each of those created distributions.
+So, move generate_probability_distribution and the stdscr stuff into another module, and call that module. 
+And change around create_entropy_plots.py accordingly, like the while-loop in main or stuff like that. 
+And then check if I need to change around my other modules.
 
 
 if __name__=="__main__":
