@@ -308,7 +308,7 @@ def main():
 
 
 #\ici 
-# Also, rename the breaking indices stuff. Should just call it output json. Cause its not just about the breaking indices. Change any relevant folder names too.
+# Get final results now. 
 # Also, once done, start commenting things in code. Go through all comments and make sure everything is correct.
 
 
