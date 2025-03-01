@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     dummy_real_detectors= [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] 
     dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * (NUM_HIDING_LOCATIONS - len(dummy_real_detectors))
@@ -147,16 +147,13 @@ if __name__ == "__main__":
         
     caps_normalized = [cap * fraction_cargo_containers_storing_drugs_max_year for loc, cap in sorted_locs]    # We multiply each original real capacity by the fraction of TEUs that contain drugs. In effect, this gives us the number of cargo containers at each port which will store drugs.
     NUM_LOCATIONS = len(caps_normalized)
- 
- 
- 
-
-    
-    
-    
     
     best_solution_found, best_fitness = run_genetic_algorithm()
     output_final_results(best_solution_found, best_fitness)
     
 
-    
+#! The whole point of this function isn't to find the actual optimal expected fraction that would detected for a given set of capacities and probability distribution. Because in that case, 
+#! we would need to solve the budget IP every time. Instead, we just want to find capacities so that for a fixed set of sensors, we see that the optimal fraction detected in different years
+#! is very different. Because that implies that for our fixed set of sensors if year_1 was a year in which the optimal fraction detected was high, and year_2 was a year in which the optimal 
+#! fraction detected was low, then more of the value in year_2 is spread out among the further lower capacity nodes. That implies it would be probably be be better to buy cheaper (but worse) detectors
+#! so that we can have our detectors "reach" those further nodes, when we line them up, to give some detection at those further nodes.

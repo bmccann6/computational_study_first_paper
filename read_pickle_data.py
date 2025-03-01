@@ -1,7 +1,7 @@
 import pickle
 from pprint import pprint as pprint 
 
-with open("generated_prob_dist_data/prob_distributions_generated_NUM_SAMPLES_PER_BIN_100_and_NUM_BINS_20.pkl", "rb") as f:
+with open("generated_prob_dist_data/prob_distributions_generated_NUM_SAMPLES_PER_BIN_10_and_NUM_BINS_20.pkl", "rb") as f:
     data = pickle.load(f)
 
 pprint(data)

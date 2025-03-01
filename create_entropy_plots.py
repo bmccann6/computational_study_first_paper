@@ -3,11 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pprint import pprint, pformat
 import time
-import curses
 import argparse
 from matplotlib.ticker import FuncFormatter
+import pickle
 from gurobipy import Model, GRB, quicksum
-# from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS
+# from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_PER_BIN, NUM_BINS
 import entropy_plot_input_variables
 
 
@@ -18,16 +18,6 @@ def validate_data():
             if drug not in item_vals:
                 raise ValueError(f"Drug '{drug}' in year '{year}' is not a valid item in item_vals")
 
-def generate_probability_distribution(power):
-    random_numbers = np.power(np.random.random(num_resource_sets), power)
-    probability_values = random_numbers / random_numbers.sum()
-    return {year: prob for year, prob in zip(resource_sets.keys(), probability_values)}
-
-def calculate_normalized_entropy(prob_dist):
-    probs = np.array(list(prob_dist.values()))
-    nonzero_probs = probs[probs > 0]        # Only take log of non-zero entries just in case we get division by 0 errors.
-    entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(num_resource_sets)
-    return entropy
 
 # NOTE: These are the A_i values in the algorithm mathieu wrote. NOTE! They are not the expected value of items at each node i.
 def calculate_backloading_stack_values(resource_set_dict, item_vals, capacities):
@@ -181,42 +171,38 @@ def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_
 
 #     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
 
-def update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist):
-    """
-    For the bin containing 'entropy', append the given sample to its lists,
-    and if the bin has reached the required number of samples, compute the
-    final value and store it in the 'final_fraction_value_detected' key.
-    """
-    for (lower_bound, upper_bound), bin_data in bins_data.items():
-        # Skip bins that do not include the current entropy
-        if not (lower_bound <= entropy < upper_bound):
-            continue
+# def update_bin_dict(bins_data, entropy_range, expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist):
+#     """
+#     For the bin containing 'entropy', append the given sample to its lists,
+#     and if the bin has reached the required number of samples, compute the
+#     final value and store it in the 'final_fraction_value_detected' key.
+#     """
+    
+#     if "final_fraction_value_detected" not in bins_data[entropy_range]:
+#         # Collect new sample
+#         bins_data[entropy_range]["expected_values_detected"].append(expected_value_detected_this_prob_dist)
+#         bins_data[entropy_range]["expected_total_values"].append(expected_total_value_this_prob_dist)
         
-        # If 'final_fraction_value_detected' is already computed, we do nothing for this bin
-        if "final_fraction_value_detected" in bin_data:
-            break  # Because we found our bin, no need to continue iterating
-        
-        # Collect new sample
-        bin_data["expected_values_detected"].append(expected_value_detected_this_prob_dist)
-        bin_data["expected_total_values"].append(expected_total_value_this_prob_dist)
-        
-        # If we've reached the required number of samples, compute the final value
-        if len(bin_data["expected_values_detected"]) == NUM_SAMPLES_NEEDED_PER_BIN:
-            total_detected = sum(bin_data["expected_values_detected"])
-            total_all = sum(bin_data["expected_total_values"])
-            bin_data["final_fraction_value_detected"] = total_detected / total_all
-            bin_data["final_expected_value_detected"] = total_detected / NUM_SAMPLES_NEEDED_PER_BIN
+#         # If we've reached the required number of samples, compute the final value
+#         if len(bins_data[entropy_range]["expected_values_detected"]) == NUM_SAMPLES_PER_BIN:
+#             total_detected = sum(bins_data[entropy_range]["expected_values_detected"])
+#             total_all = sum(bins_data[entropy_range]["expected_total_values"])
+#             bins_data[entropy_range]["final_fraction_value_detected"] = total_detected / total_all
+#             bins_data[entropy_range]["final_expected_value_detected"] = total_detected / NUM_SAMPLES_PER_BIN
             
-        break
 
-    return bins_data
+#     return bins_data
 
 def plot_entropy_vs_final_fraction_value_detected(bins_data):
     """
     Plot the (final) fraction detected as a function of entropy bins.
     """
         
-    x_labels = [f"{k[0]:.2f}-{k[1]:.2f}" for k in bins_data]
+    print("This is bins_data:")
+    pprint(bins_data)    
+        
+        
+    x_labels = [k for k in bins_data]
     y_values = [bins_data[k]["final_fraction_value_detected"] for k in bins_data]
 
     data_range = max(y_values) - min(y_values)
@@ -252,7 +238,7 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
     Plot the (final) expected value detected as a function of entropy bins.
     """
         
-    x_labels = [f"{k[0]:.2f}-{k[1]:.2f}" for k in bins_data]
+    x_labels = [k for k in bins_data]
     y_values = [bins_data[k]["final_expected_value_detected"] for k in bins_data]
     
     data_range = max(y_values) - min(y_values)
@@ -288,81 +274,66 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
     plt.savefig("entropy_plots/value_detected_plots/entropy_vs_value_detected.png")
     # plt.show()
 
-def main(stdscr):
-    # Clear screen
-    stdscr.clear()
+def main():
     
     start_time = time.time()
     validate_data()
-    power = 1
-    power_step_factor = 1.25        # From experimenting, I found that this value makes the code run decently fast
-    bins_data = {(i/NUM_BINS, (i+1)/NUM_BINS): {"expected_values_detected": [], "expected_total_values": []} for i in range(NUM_BINS)}
-    max_num_while_loop_iterations_before_increasing_power = NUM_SAMPLES_NEEDED_PER_BIN * NUM_BINS
-    num_iterations_while_loop_at_current_power = 0
-    num_iterations = 0
+    bins_data = {}
+    for i in range(NUM_BINS):
+        bin_key_str = f"{i/NUM_BINS:.2f}-{(i+1)/NUM_BINS:.2f}"
+        bins_data[bin_key_str] = {"expected_values_detected": [], "expected_total_values": []}
+
+
+    with open(args.prob_distributions, 'rb') as file:
+        prob_distributions_dict = pickle.load(file)
  
-    # We only store resource_sets_info once at the beginning
-    global json_data
-    resource_sets_info = compute_resource_sets_info_for_json()
-    json_data = [
-        {"resource_sets_info": resource_sets_info}
-    ] 
- 
-        
-    for i in range(NUM_BINS-1, -1, -1):
-        while ("final_fraction_value_detected" not in bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)] and len(bins_data[(i/NUM_BINS, (i+1)/NUM_BINS)]["expected_values_detected"]) < NUM_SAMPLES_NEEDED_PER_BIN):
-            prob_dist = generate_probability_distribution(power)
-            entropy = calculate_normalized_entropy(prob_dist)
+    for entropy_range, entries in prob_distributions_dict.items():
+        key_str = f"{entropy_range[0]:.2f}-{entropy_range[1]:.2f}"
+        for entry in entries:
+            prob_dist = entry["prob_dist"]
             expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget)
-            bins_data = update_bin_dict(bins_data, entropy, expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist)
- 
-            # Log just prob_dist and entropy each iteration
-            json_data.append({"prob_dist": prob_dist, "entropy": entropy})
-            
-            # The following is for printing progress to the terminal.
-            stdscr.addstr(0, 0, "Bins data sample counts:\n{}".format(pformat({k: len(v["expected_values_detected"]) if "final_fraction_value_detected" not in v else "All samples obtained." for k, v in bins_data.items()})))
-            stdscr.addstr(NUM_BINS + 1, 0, "Power: {}".format(power))
-            stdscr.addstr(NUM_BINS + 2, 0, "Iterations: {}".format(num_iterations))
-            stdscr.addstr(NUM_BINS + 3, 0, "Time Elapsed: {:.2f} seconds".format(time.time() - start_time))
-            stdscr.refresh()  # Refresh the screen            
-            
-            num_iterations += 1
-            num_iterations_while_loop_at_current_power += 1
 
-            all_higher_bins_done = all( "final_fraction_value_detected" in bins_data[(j/NUM_BINS, (j+1)/NUM_BINS)] for j in range(i, NUM_BINS) )            
-            if all_higher_bins_done or (num_iterations_while_loop_at_current_power > max_num_while_loop_iterations_before_increasing_power):     # If the higher bins have been filled or we have done more than the maximum number of while loop iterations allowed
-                power *= power_step_factor
-                num_iterations_while_loop_at_current_power = 0
-
+            bins_data[key_str]["expected_values_detected"].append(expected_value_detected_this_prob_dist)
+            bins_data[key_str]["expected_total_values"].append(expected_total_value_this_prob_dist)        
+            
+    for entropy_range, _ in prob_distributions_dict.items():        
+        key_str = f"{entropy_range[0]:.2f}-{entropy_range[1]:.2f}"        
+        total_detected = sum(bins_data[key_str]["expected_values_detected"])
+        total_all = sum(bins_data[key_str]["expected_total_values"])
+        bins_data[key_str]["final_fraction_value_detected"] = total_detected / total_all
+        bins_data[key_str]["final_expected_value_detected"] = total_detected / NUM_SAMPLES_PER_BIN        
+        
+        
     return bins_data
 
 
-
-
-\ici
-Then make a separate script which generates probability distributions and saves them in a json or pickle file. 
-Getting distributions which fit into entropy bins is the longest part. 
-Once we have a set though, then we can just run the rest of the code and budget mip for each of those created distributions.
-So, move generate_probability_distribution and the stdscr stuff into another module, and call that module. 
-And change around create_entropy_plots.py accordingly, like the while-loop in main or stuff like that. 
-And then check if I need to change around my other modules.
+#\ici 
+# Also, rename the breaking indices stuff. Should just call it output json. Cause its not just about the breaking indices. Change any relevant folder names too.
+# Also, once done, start commenting things in code. Go through all comments and make sure everything is correct.
 
 
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
+    parser.add_argument('-prob_distributions', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_NEEDED_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
-    # Store all runs here before/while writing them out
-    json_data = []
-    bins_at_end = curses.wrapper(main)
+
+    # We only store resource_sets_info once at the beginning
+    resource_sets_info = compute_resource_sets_info_for_json()
+    json_data = {"resource_sets_info": resource_sets_info}
+    
+    
+    bins_at_end = main()
+    json_data["bins_at_end"] = bins_at_end
 
     print("Creating json...")
     with open("breaking_indices_jsons/breaking_indices_log.json", "w") as f:
         json.dump(json_data, f, indent=4)    
     print("Finished creating json.")
+    
     
     plot_entropy_vs_final_fraction_value_detected(bins_at_end)
     plot_entropy_vs_final_expected_value_detected(bins_at_end) 
