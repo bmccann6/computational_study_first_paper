@@ -230,7 +230,7 @@ def plot_entropy_vs_final_fraction_value_detected(bins_data):
     
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
-    plt.savefig("entropy_plots/fraction_detected_plots/entropy_vs_fraction_detected.png")
+    plt.savefig(f"entropy_plots/entropy_vs_fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.png")
     # plt.show()
 
 def plot_entropy_vs_final_expected_value_detected(bins_data):
@@ -271,7 +271,7 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
     plt.gca().yaxis.set_major_formatter(formatter)      
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
-    plt.savefig("entropy_plots/value_detected_plots/entropy_vs_value_detected.png")
+    plt.savefig(f"entropy_plots/entropy_vs_value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.png")
     # plt.show()
 
 def main():
@@ -330,7 +330,7 @@ if __name__=="__main__":
     json_data["bins_at_end"] = bins_at_end
 
     print("Creating json...")
-    with open("/breaking_indices_log.json", "w") as f:
+    with open(f"output_data_entropy_plots/output_data_entropy_plot_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.json", "w") as f:
         json.dump(json_data, f, indent=4)    
     print("Finished creating json.")
     

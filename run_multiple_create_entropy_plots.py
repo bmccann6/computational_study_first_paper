@@ -23,7 +23,7 @@ def main():
             json.dump(config, f, indent=4)
         
         # Run create_entropy_plots.py with the temporary config file
-        result = subprocess.run(["python", "create_entropy_plots.py", "-config", temp_config_file, "-prob_distributions", "generated_prob_dist_data/prob_distributions_generated_NUM_SAMPLES_PER_BIN_10_and_NUM_BINS_20.pkl"])
+        result = subprocess.run(["python", "create_entropy_plots.py", "-config", temp_config_file, "-prob_distributions", args.prob_distributions])
         if result.returncode != 0:
             print(f"Error running create_entropy_plots.py for budget {budget}")
             continue
@@ -31,9 +31,9 @@ def main():
         
         # Rename the output plot to include the budget value in the filename
         src_fraction_plot = "entropy_plots/fraction_detected_plots/entropy_vs_fraction_detected.png"
-        dst_fraction_plot = f"entropy_plots/fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_{NUM_SAMPLES_PER_BIN}_samples_per_bin.png"
+        dst_fraction_plot = f"entropy_plots/fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.png"
         src_value_plot = "entropy_plots/value_detected_plots/entropy_vs_value_detected.png"
-        dst_value_plot = f"entropy_plots/value_detected_plots/entropy_vs_value_detected_budget_{budget}_{NUM_SAMPLES_PER_BIN}_samples_per_bin.png"
+        dst_value_plot = f"entropy_plots/value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.png"
         if os.path.exists(src_fraction_plot):
             os.replace(src_fraction_plot, dst_fraction_plot)
         if os.path.exists(src_value_plot):
