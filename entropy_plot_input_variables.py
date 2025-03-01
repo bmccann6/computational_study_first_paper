@@ -7,7 +7,7 @@ def get_configuration(config_path):
     
     item_vals = config_data["item_vals"]
     resource_sets = config_data["resource_sets"]
-    num_resource_sets = len(resource_sets)
+    NUM_RESOURCE_SETS = len(resource_sets)
     hiding_locations = config_data["hiding_locations"]
     NUM_HIDING_LOCATIONS = len(hiding_locations)
     detectors = config_data["detectors"]
@@ -26,6 +26,6 @@ def get_configuration(config_path):
     NUM_SAMPLES_PER_BIN = 10
     NUM_BINS = 20
 
-    return item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, \
+    return item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, \
             detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS
 

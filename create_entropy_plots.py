@@ -7,7 +7,7 @@ import argparse
 from matplotlib.ticker import FuncFormatter
 import pickle
 from gurobipy import Model, GRB, quicksum
-# from entropy_plot_input_variables import item_vals, resource_sets, num_resource_sets, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_PER_BIN, NUM_BINS
+# from entropy_plot_input_variables import item_vals, resource_sets, NUM_RESOURCE_SETS, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_PER_BIN, NUM_BINS
 import entropy_plot_input_variables
 
 
@@ -309,7 +309,8 @@ def main():
 
 #\ici 
 # Get final results now. 
-# Also, once done, start commenting things in code. Go through all comments and make sure everything is correct.
+# Then, once done, start commenting things in code. Go through all comments and make sure everything is correct. Make sure to explain the logic of everything too, in case I need to look at my code in a few weeks. 
+# Its important for my own efficiency later.
 
 
 if __name__=="__main__":
@@ -318,7 +319,7 @@ if __name__=="__main__":
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     parser.add_argument('-prob_distributions', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
 
     # We only store resource_sets_info once at the beginning

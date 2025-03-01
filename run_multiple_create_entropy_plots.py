@@ -49,5 +49,5 @@ if __name__ == "__main__":
     parser.add_argument('-prob_distributions', type=str, required=True, help='Path to the Pickle file of probability distributions')    
     args = parser.parse_args()
     
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    _, _, _, _, _, _, _, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
     main()

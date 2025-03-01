@@ -9,14 +9,14 @@ import entropy_plot_input_variables
 
 
 def generate_probability_distribution(power):
-    random_numbers = np.power(np.random.random(num_resource_sets), power)
+    random_numbers = np.power(np.random.random(NUM_RESOURCE_SETS), power)
     probability_values = random_numbers / random_numbers.sum()
     return {year: prob for year, prob in zip(resource_sets.keys(), probability_values)}
 
 def calculate_normalized_entropy(prob_dist):
     probs = np.array(list(prob_dist.values()))
     nonzero_probs = probs[probs > 0]        # Only take log of non-zero entries just in case we get division by 0 errors.
-    entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(num_resource_sets)
+    entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(NUM_RESOURCE_SETS)
     return entropy
 
 def update_bin_dict(bins_data, prob_dist, entropy):
@@ -37,16 +37,16 @@ def update_bin_dict(bins_data, prob_dist, entropy):
         
     return bins_data
 
-def worker_task(resource_sets, num_resource_sets, power, batch_size_per_proc):
+def worker_task(resource_sets, NUM_RESOURCE_SETS, power, batch_size_per_proc):
     results = []
     for _ in range(batch_size_per_proc):
-        random_numbers = np.power(np.random.random(num_resource_sets), power)
+        random_numbers = np.power(np.random.random(NUM_RESOURCE_SETS), power)
         probability_values = random_numbers / random_numbers.sum()
         prob_dist = {year: prob for year, prob in zip(resource_sets.keys(), probability_values)}
 
         probs = np.array(list(prob_dist.values()))
         nonzero_probs = probs[probs > 0]
-        entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(num_resource_sets)
+        entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(NUM_RESOURCE_SETS)
 
         results.append((prob_dist, entropy))
         
@@ -71,7 +71,7 @@ def main(stdscr):
     for i in range(NUM_BINS - 1, -1, -1):
         bin_key = (i/NUM_BINS, (i+1)/NUM_BINS)
         while len(bins_data[bin_key]) < NUM_SAMPLES_PER_BIN:
-            tasks = [(resource_sets, num_resource_sets, power, batch_size_per_proc) for _ in range(num_processes)]   # Parallel batch sampling. Create tasks for each process
+            tasks = [(resource_sets, NUM_RESOURCE_SETS, power, batch_size_per_proc) for _ in range(num_processes)]   # Parallel batch sampling. Create tasks for each process
 
             with Pool(processes=num_processes) as pool:
                 batch_results = pool.starmap(worker_task, tasks)     # results is a list of lists; flatten it afterwards
@@ -109,7 +109,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")           # We just need the config file to get the resource sets
     parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, num_resource_sets, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    _, resource_sets, NUM_RESOURCE_SETS, _, _, _, _, _, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     # Store all runs here before/while writing them out
     bins_at_end = curses.wrapper(main)
