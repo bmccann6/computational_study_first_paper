@@ -7,7 +7,6 @@ import argparse
 from matplotlib.ticker import FuncFormatter
 import pickle
 from gurobipy import Model, GRB, quicksum
-# from entropy_plot_input_variables import item_vals, resource_sets, NUM_RESOURCE_SETS, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_PER_BIN, NUM_BINS
 import entropy_plot_input_variables
 
 
@@ -281,19 +280,12 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
 def main():
     
     start_time = time.time()
-    validate_data()
-    
-    precomputed_equilib_vals = compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year)    
-    
+   
     bins_data = {}
     for i in range(NUM_BINS):
         bin_key_str = f"{i/NUM_BINS:.2f}-{(i+1)/NUM_BINS:.2f}"
         bins_data[bin_key_str] = {"expected_values_detected": [], "expected_total_values": []}
 
-
-    with open(args.prob_distributions, 'rb') as file:
-        prob_distributions_dict = pickle.load(file)
- 
     num_scenarios_done = 0
     for entropy_range, entries in prob_distributions_dict.items():
         key_str = f"{entropy_range[0]:.2f}-{entropy_range[1]:.2f}"
@@ -331,13 +323,16 @@ if __name__=="__main__":
     args = parser.parse_args()
     item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
+    validate_data()
+    precomputed_equilib_vals = compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year) 
 
-    # We only store resource_sets_info once at the beginning
-    resource_sets_info = compute_resource_sets_info_for_json()
-    json_data = {"resource_sets_info": resource_sets_info}
-    
+    with open(args.prob_distributions, 'rb') as file:
+        prob_distributions_dict = pickle.load(file)    
     
     bins_at_end = main()
+    
+    resource_sets_info = compute_resource_sets_info_for_json()
+    json_data = {"resource_sets_info": resource_sets_info}    
     json_data["bins_at_end"] = bins_at_end
 
     print("Creating json...")

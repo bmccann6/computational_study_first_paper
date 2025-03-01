@@ -3,7 +3,6 @@ from deap import base, creator, tools, algorithms
 import argparse
 from pprint import pprint as pprint
 import json
-# from entropy_plot_input_variables import resource_sets, hiding_locations, fraction_cargo_containers_storing_drugs, total_real_detectors, null_detectors_count, detector_accuracies, max_num_items_across_years
 import entropy_plot_input_variables
 from create_entropy_plots import calculate_expected_value_under_equilibrium_each_node
 
