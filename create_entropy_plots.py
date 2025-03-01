@@ -330,7 +330,7 @@ if __name__=="__main__":
     json_data["bins_at_end"] = bins_at_end
 
     print("Creating json...")
-    with open("breaking_indices_jsons/breaking_indices_log.json", "w") as f:
+    with open("/breaking_indices_log.json", "w") as f:
         json.dump(json_data, f, indent=4)    
     print("Finished creating json.")
     
