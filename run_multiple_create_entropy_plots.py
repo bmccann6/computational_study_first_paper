@@ -12,7 +12,7 @@ def main():
     
     # Iterate over some budgets
     # for budget in range(100000, 2300000 + 1, 25000):
-    for budget in [110000]:
+    for budget in [101000]:
         print(f"Running for budget: {budget}")
         # <-- Modified: Update the budget value in the config
         config["budget"] = budget

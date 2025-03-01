@@ -88,6 +88,15 @@ def calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item
         
     return expected_value_under_equilibrium_each_node, breakpoints
 
+def compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year):
+    """Returns dict: year -> {node: eq_value}, also captures breakpoints if needed."""
+    year_to_equilibrium_node_values = {}
+    for year, resource_set_dict in resource_sets.items():
+        eq_vals, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year[year])
+        year_to_equilibrium_node_values[year] = eq_vals
+        
+    return year_to_equilibrium_node_values
+
 def compute_resource_sets_info_for_json():
     """
     Since resource_sets_info is deterministic and does not depend on
@@ -103,26 +112,23 @@ def compute_resource_sets_info_for_json():
         })
     return resource_sets_info
 
-def calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations):
-    expected_value_each_node_under_this_prob_dist = {i: 0 for i in range(len(hiding_locations))}
-    for year, resource_set_dict in resource_sets.items():
-        expected_value_under_equilibrium_each_node, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year[year])
-        for node in range(len(hiding_locations)):
-            expected_value_each_node_under_this_prob_dist[node] += prob_dist[year] * expected_value_under_equilibrium_each_node[node]
+def calculate_expected_value_each_node_this_prob_dist(prob_dist, precomputed_equilib_vals, NUM_HIDING_LOCATIONS):
+    expected_value_each_node_under_this_prob_dist = {i: 0 for i in range(NUM_HIDING_LOCATIONS)}
+    for year, eq_vals in precomputed_equilib_vals.items():
+        for node in range(NUM_HIDING_LOCATIONS):
+            expected_value_each_node_under_this_prob_dist[node] += prob_dist[year] * eq_vals[node]
             
     return expected_value_each_node_under_this_prob_dist
 
 def get_optimal_list_detectors_this_prob_dist(budget, NUM_HIDING_LOCATIONS, detectors, expected_value_each_node_under_this_prob_dist):
-    # expected_value_each_node_under_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
-
     nodes = range(NUM_HIDING_LOCATIONS)
-
     m = Model("integer_program")
+    m.setParam('OutputFlag', 0)    # Suppress the Gurobi output to console
+    
     x = m.addVars(detectors, nodes, vtype=GRB.BINARY, name="x")  # Binary decision variables
     objective = quicksum(expected_value_each_node_under_this_prob_dist[node] * detectors[detector_type]["accuracy"] * x[detector_type, node] for detector_type in detectors for node in nodes)
     m.setObjective(objective, GRB.MAXIMIZE)
 
-    # Budget constraint
     m.addConstr(quicksum(detectors[detector_type]["cost"] * x[detector_type, node] for detector_type in detectors for node in nodes) <= budget, "budget_constraint")
 
     # Each item can be selected at most once across all t
@@ -134,28 +140,26 @@ def get_optimal_list_detectors_this_prob_dist(budget, NUM_HIDING_LOCATIONS, dete
     # Create list of tuples with (detector_type_name, accuracy, x_value)
     optimal_list_detectors_this_prob_dist = [(detector_type, detectors[detector_type]['accuracy'])
                                                 for detector_type in detectors for node in nodes if x[detector_type, node].x > 0 ]
-    
-    
-    
+        
     return optimal_list_detectors_this_prob_dist
     
-def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget):
+def calculate_expected_and_total_values_detected_this_prob_dist(prob_dist, precomputed_equilib_vals, NUM_HIDING_LOCATIONS, detectors, budget):
     
-    expected_value_each_node_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, resource_sets, hiding_locations)
+    expected_value_each_node_this_prob_dist = calculate_expected_value_each_node_this_prob_dist(prob_dist, precomputed_equilib_vals, NUM_HIDING_LOCATIONS)
     optimal_list_detectors_this_prob_dist = get_optimal_list_detectors_this_prob_dist(budget, NUM_HIDING_LOCATIONS, detectors, expected_value_each_node_this_prob_dist)
     
-    print("\nThis is optimal_list_detectors_this_prob_dist:")
-    pprint(optimal_list_detectors_this_prob_dist)
+    # print("\nThis is optimal_list_detectors_this_prob_dist:")
+    # pprint(optimal_list_detectors_this_prob_dist)
     
     detector_accuracies = sorted([accuracy for _, accuracy in optimal_list_detectors_this_prob_dist], reverse=True) + [0] * (NUM_HIDING_LOCATIONS - len(optimal_list_detectors_this_prob_dist))     # We sort the detector accuracies just in case (probably not needed because the way the MIP works but whatever), and then add any remaining null-detectors to ensure the number of detectors we have is equal to the number of hiding locations (makes the code easier later if we require that)
-    print(f"This is detector_accuracies: {detector_accuracies}")
+    # print(f"This is detector_accuracies: {detector_accuracies}")
  
     expected_value_detected_this_prob_dist = sum(detector_accuracies[i] * expected_value_each_node_this_prob_dist[i] for i in range(len(expected_value_each_node_this_prob_dist)))
     expected_total_value_this_prob_dist = sum(expected_value_each_node_this_prob_dist.values())
     
     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
 
-# def calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist):
+# def calculate_expected_and_total_values_detected_this_prob_dist(prob_dist):
 #     expected_value_detected_this_prob_dist = 0
 #     expected_total_value_this_prob_dist = 0
 
@@ -278,6 +282,9 @@ def main():
     
     start_time = time.time()
     validate_data()
+    
+    precomputed_equilib_vals = compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year)    
+    
     bins_data = {}
     for i in range(NUM_BINS):
         bin_key_str = f"{i/NUM_BINS:.2f}-{(i+1)/NUM_BINS:.2f}"
@@ -287,14 +294,18 @@ def main():
     with open(args.prob_distributions, 'rb') as file:
         prob_distributions_dict = pickle.load(file)
  
+    num_scenarios_done = 0
     for entropy_range, entries in prob_distributions_dict.items():
         key_str = f"{entropy_range[0]:.2f}-{entropy_range[1]:.2f}"
         for entry in entries:
             prob_dist = entry["prob_dist"]
-            expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist_across_resource_sets(prob_dist, resource_sets, hiding_locations, detectors, budget)
+            expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist = calculate_expected_and_total_values_detected_this_prob_dist(prob_dist, precomputed_equilib_vals, NUM_HIDING_LOCATIONS, detectors, budget)
 
             bins_data[key_str]["expected_values_detected"].append(expected_value_detected_this_prob_dist)
             bins_data[key_str]["expected_total_values"].append(expected_total_value_this_prob_dist)        
+            
+            num_scenarios_done += 1
+            print(f"\rNumber of scenarios done: {num_scenarios_done}. Time elapsed: {time.time() - start_time} seconds", end="")
             
     for entropy_range, _ in prob_distributions_dict.items():        
         key_str = f"{entropy_range[0]:.2f}-{entropy_range[1]:.2f}"        
@@ -311,7 +322,6 @@ def main():
 # Get final results now. 
 # Then, once done, start commenting things in code. Go through all comments and make sure everything is correct. Make sure to explain the logic of everything too, in case I need to look at my code in a few weeks. 
 # Its important for my own efficiency later.
-
 
 if __name__=="__main__":
 
