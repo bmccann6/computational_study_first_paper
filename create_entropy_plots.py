@@ -87,11 +87,11 @@ def calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item
         
     return expected_value_under_equilibrium_each_node, breakpoints
 
-def compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations_each_year):
+def compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations):
     """Returns dict: year -> {node: eq_value}, also captures breakpoints if needed."""
     year_to_equilibrium_node_values = {}
     for year, resource_set_dict in resource_sets.items():
-        eq_vals, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year[year])
+        eq_vals, _ = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
         year_to_equilibrium_node_values[year] = eq_vals
         
     return year_to_equilibrium_node_values
@@ -103,7 +103,7 @@ def compute_resource_sets_info_for_json():
     """
     resource_sets_info = []
     for year, resource_set_dict in resource_sets.items():
-        expected_value_items_each_node_this_prob_dist_specific_resource_set, breakpoints = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations_each_year[year])
+        expected_value_items_each_node_this_prob_dist_specific_resource_set, breakpoints = calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item_vals, sizes_hiding_locations)
         resource_sets_info.append({
             "year": year,
             "breakpoints": breakpoints,
@@ -318,11 +318,11 @@ if __name__=="__main__":
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
+    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
     prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_prob_distributions_dict(args.prob_distributions_path)
 
     validate_data()
-    precomputed_equilib_vals = compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations_each_year) 
+    precomputed_equilib_vals = compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations) 
 
     # with open(args.prob_distributions_path, 'rb') as file:
     #     prob_distributions_dict = pickle.load(file)    

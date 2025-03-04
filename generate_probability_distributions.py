@@ -111,7 +111,7 @@ if __name__=="__main__":
     args = parser.parse_args()
     _, resource_sets, NUM_RESOURCE_SETS, _, _, _, _, _= entropy_plot_input_variables.get_configuration(args.config_path)
 
-    NUM_SAMPLES_TO_GENERATE_PER_BIN = 10
+    NUM_SAMPLES_TO_GENERATE_PER_BIN = 200
     NUM_BINS_TO_HAVE = 20
 
     # Store all runs here before/while writing them out
