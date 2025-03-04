@@ -129,9 +129,9 @@ def output_final_results(best_solution_found, best_fitness):
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
-    parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
+    parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, _, _, _, _, _ = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, _, _, _, = entropy_plot_input_variables.get_configuration(args.config_path)
 
     dummy_real_detectors= [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] 
     dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * (NUM_HIDING_LOCATIONS - len(dummy_real_detectors))

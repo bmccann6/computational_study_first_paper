@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "create_entropy_plots.py",
             "console": "integratedTerminal",
-            "args": ["-config", "original_config.json"]
+            "args": ["-config_path", "original_config.json"]
         }
     ]
 }

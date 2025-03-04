@@ -222,13 +222,13 @@ def main():
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
-    parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
-    parser.add_argument('-prob_distributions', type=str, required=True, help='Path to the Pickle file of probability distributions')
+    parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
+    parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config_path, args.prob_distributions_path)
     validate_data()
     precomputed_equilib_vals = compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year)
-    with open(args.prob_distributions, 'rb') as file:
+    with open(args.prob_distributions_path, 'rb') as file:
         prob_distributions_dict = pickle.load(file)
     bins_at_end = main()
     resource_sets_info = compute_resource_sets_info_for_json()

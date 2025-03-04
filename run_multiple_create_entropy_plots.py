@@ -7,7 +7,7 @@ import entropy_plot_input_variables
 
 def main():
     # Load the original configuration
-    with open(args.config, "r") as f:
+    with open(args.config_path, "r") as f:
         config = json.load(f)
     
     # Iterate over some budgets
@@ -24,7 +24,7 @@ def main():
             json.dump(config, f, indent=4)
         
         # Run create_entropy_plots.py with the temporary config file
-        result = subprocess.run(["python", "create_entropy_plots.py", "-config", temp_config_file, "-prob_distributions", args.prob_distributions])
+        result = subprocess.run(["python", "create_entropy_plots.py", "-config_path", temp_config_file, "-prob_distributions_path", args.prob_distributions_path])
         if result.returncode != 0:
             print(f"Error running create_entropy_plots.py for budget {budget}")
             continue
@@ -47,11 +47,13 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
-    parser.add_argument('-config', type=str, required=True, help='Path to the JSON configuration file.')
-    parser.add_argument('-prob_distributions', type=str, required=True, help='Path to the Pickle file of probability distributions')    
+    parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
+    parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')    
     args = parser.parse_args()
     
-    _, _, _, _, NUM_HIDING_LOCATIONS, _, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
+    _, _, _, _, NUM_HIDING_LOCATIONS, _, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
+    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_prob_distributions_dict(args.prob_distributions_path)
+
 
     # Calculate the smallest difference between any pair of detectors
     detector_costs = [detector["cost"] for detector in detectors.values()]  

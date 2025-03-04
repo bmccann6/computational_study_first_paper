@@ -1,8 +1,9 @@
 import json 
+import pickle
+import re
 from pprint import pprint as pprint
 
 def get_configuration(config_path):
-
     with open(config_path, 'r') as file:
         config_data = json.load(file)
     
@@ -29,13 +30,20 @@ def get_configuration(config_path):
     print("This is sizes_hiding_locations_each_year:")
     pprint(sizes_hiding_locations_each_year)
 
-    NUM_SAMPLES_PER_BIN = 100000
-    NUM_BINS = 20
-
     return item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, \
-            detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS
+            detectors, budget
 
+def get_prob_distributions_dict(prob_distributions_path):
+    with open(prob_distributions_path, 'rb') as file:
+        prob_distributions_dict = pickle.load(file)      
 
+    NUM_SAMPLES_PER_BIN = int(re.search(r'NUM_SAMPLES_PER_BIN_(\d+)_and', prob_distributions_path).group(1))
+    NUM_BINS = int(re.search(r'NUM_BINS_(\d+)\.pkl', prob_distributions_path).group(1))
+
+    print(f"This is NUM_SAMPLES_PER_BIN: {NUM_SAMPLES_PER_BIN}")
+    print(f"This is NUM_BINS: {NUM_BINS}")
+
+    return prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS
 
 #\ici 
 # Try now all the years are the same and fraction_cargo_containers_storing_drugs.
