@@ -17,11 +17,7 @@ def get_configuration(config_path):
     detectors = config_data["detectors"]
     for detector in detectors.values():
         detector['accuracy'] *= fraction_cargo_containers_inspected     # Having the detector accuracies be multiplied by fraction_cargo_containers_inspected is equivalent to only inspecting fraction_cargo_containers_inspected of containers at a port by any given detector.
-    
-    print("This is detectors:")
-    pprint(detectors)
-    
-        
+            
     budget = config_data["budget"]
     fraction_containers_accessible_to_hider = config_data['fraction_containers_accessible_to_hider']
     number_items_per_cargo_container = config_data['number_items_per_cargo_container']
@@ -33,7 +29,6 @@ def get_configuration(config_path):
     # fraction_cargo_containers_storing_drugs = 0.035
     # fraction_cargo_containers_storing_drugs = (10/3)/100
     fraction_cargo_containers_storing_drugs = fraction_containers_accessible_to_hider / number_items_per_cargo_container    
-    print(f"This is fraction_cargo_containers_storing_drugs: {fraction_cargo_containers_storing_drugs}")
     
     #NOTE: Once we have found good values for the capacities, then change sizes_hiding_locations here so that in create_entropy_plots, we use the capacities we found.
     # sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
@@ -41,8 +36,6 @@ def get_configuration(config_path):
         
     # sizes_hiding_locations = {year: [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)] for year in resource_sets.keys()}
     sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]
-    print("This is sizes_hiding_locations:")
-    pprint(sizes_hiding_locations)
 
     return item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, \
             detectors, budget
