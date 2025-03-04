@@ -87,7 +87,7 @@ def calculate_expected_value_under_equilibrium_each_node(resource_set_dict, item
         
     return expected_value_under_equilibrium_each_node, breakpoints
 
-def compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year):
+def compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations_each_year):
     """Returns dict: year -> {node: eq_value}, also captures breakpoints if needed."""
     year_to_equilibrium_node_values = {}
     for year, resource_set_dict in resource_sets.items():
@@ -199,11 +199,7 @@ def calculate_expected_and_total_values_detected_this_prob_dist(prob_dist, preco
 def plot_entropy_vs_final_fraction_value_detected(bins_data):
     """
     Plot the (final) fraction detected as a function of entropy bins.
-    """
-        
-    print("This is bins_data:")
-    pprint(bins_data)    
-        
+    """       
         
     x_labels = [k for k in bins_data]
     y_values = [bins_data[k]["final_fraction_value_detected"] for k in bins_data]
@@ -310,6 +306,7 @@ def main():
     return bins_data
 
 
+
 #\ici 
 # Get final results now. 
 # Then, once done, start commenting things in code. Go through all comments and make sure everything is correct. Make sure to explain the logic of everything too, in case I need to look at my code in a few weeks. 
@@ -324,7 +321,7 @@ if __name__=="__main__":
     item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config)
 
     validate_data()
-    precomputed_equilib_vals = compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year) 
+    precomputed_equilib_vals = compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations_each_year) 
 
     with open(args.prob_distributions, 'rb') as file:
         prob_distributions_dict = pickle.load(file)    
