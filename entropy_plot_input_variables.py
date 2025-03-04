@@ -38,9 +38,7 @@ def get_configuration(config_path):
     #NOTE: Once we have found good values for the capacities, then change sizes_hiding_locations here so that in create_entropy_plots, we use the capacities we found.
     # sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
     # sizes_hiding_locations = {year: [int(size * num_items_per_year[year]/total_original_capacity) for size in sorted(hiding_locations.values(), reverse=True)]  for year in resource_sets.keys()}       # At each index i of a year, the size of hiding location i is the value.
-    
-    # \ici Change the sizes_hiding_locations stuff. 
-    
+        
     # sizes_hiding_locations = {year: [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)] for year in resource_sets.keys()}
     sizes_hiding_locations = [int(size * fraction_cargo_containers_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]
     print("This is sizes_hiding_locations:")

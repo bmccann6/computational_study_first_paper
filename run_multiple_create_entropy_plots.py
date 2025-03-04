@@ -11,9 +11,7 @@ def main():
         config = json.load(f)
     
     # Iterate over some budgets
-    # for budget in range(budget_minimum, budget_maximum + 1, budget_step_size):
-    # for budget in [500000]:
-    for budget in [1000000]:        
+    for budget in budgets:
         print(f"Running for budget: {budget}")
         # <-- Modified: Update the budget value in the config
         config["budget"] = budget
@@ -61,15 +59,8 @@ if __name__ == "__main__":
     budget_maximum =  max(detector_costs) * NUM_HIDING_LOCATIONS
     # budget_step_size = min(abs(detector_costs[i] - detector_costs[j]) for i in range(len(detector_costs)) for j in range(i + 1, len(detector_costs))) 
     budget_step_size = 50000
+    # budgets = range(budget_minimum, budget_maximum + 1, budget_step_size)
+    budgets = [1000000]
     
         
     main()
-
-
-# \ici Have it so that in the output file, we also have a tag for the optimal set of detectors purchased for each probability distribution.
-# Note this wont grow as the budget increases. It will be the same. It will just be NUM_SAMPLES_PER_BIN * NUM_BINS more tags.
-# Also, in this case, maybe we should change the output so that we have in each entropy bin the prob_dist with the expected value detected and total value detected at the end for each prob_dist.
-
-# \ici Also, don't think that just re-running everything with more samples will change much if the difference in expected fraction detected is minimal between entropy bins.
-
-# \ici Add some functionality which states that the number of samples per bin for the pickle file we are using must match up with the NUM_SAMPLES_PER_BIN in entropy_plot_input_variables.py

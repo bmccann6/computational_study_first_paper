@@ -5,7 +5,7 @@ from pprint import pprint, pformat
 import time
 import argparse
 from matplotlib.ticker import FuncFormatter
-import pickle
+import datetime
 from gurobipy import Model, GRB, quicksum
 import entropy_plot_input_variables
 
@@ -229,7 +229,7 @@ def plot_entropy_vs_final_fraction_value_detected(bins_data):
     
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
-    plt.savefig(f"entropy_plots/entropy_vs_fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.png")
+    plt.savefig(f"entropy_plots/entropy_vs_fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png")
     # plt.show()
 
 def plot_entropy_vs_final_expected_value_detected(bins_data):
@@ -270,7 +270,7 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
     plt.gca().yaxis.set_major_formatter(formatter)      
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
-    plt.savefig(f"entropy_plots/entropy_vs_value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.png")
+    plt.savefig(f"entropy_plots/entropy_vs_value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png")
     # plt.show()
 
 def main():
@@ -307,9 +307,8 @@ def main():
 
 
 
-#\ici 
-# Get final results now. 
-# Then, once done, start commenting things in code. Go through all comments and make sure everything is correct. Make sure to explain the logic of everything too, in case I need to look at my code in a few weeks. 
+#\ici  
+# Start commenting things in code. Go through all comments and make sure everything is correct. Make sure to explain the logic of everything too, in case I need to look at my code in a few weeks. 
 # Its important for my own efficiency later.
 
 if __name__=="__main__":
@@ -320,7 +319,8 @@ if __name__=="__main__":
     args = parser.parse_args()
     item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
     prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_prob_distributions_dict(args.prob_distributions_path)
-
+    time_run_starts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    
     validate_data()
     precomputed_equilib_vals = compute_all_years_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations) 
 
@@ -334,7 +334,7 @@ if __name__=="__main__":
     json_data["bins_at_end"] = bins_at_end
 
     print("Creating json...")
-    with open(f"output_data_entropy_plots/output_data_entropy_plot_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}.json", "w") as f:
+    with open(f"output_data_entropy_plots/output_data_entropy_plot_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.json", "w") as f:
         json.dump(json_data, f, indent=4)    
     print("Finished creating json.")
     
