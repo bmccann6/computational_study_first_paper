@@ -260,11 +260,11 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
         return f'${y:.2f}'
     
     plt.figure(figsize=(15, 8)) 
-    plt.title("Normalized Entropy vs. Expected Value Detected (in billions USD)", fontsize=14)
+    plt.title("Normalized Entropy vs. Average Expected Value Detected", fontsize=14)
     plt.bar(x_labels, y_values)
     plt.xticks(rotation=45, fontsize=11)
     plt.xlabel("\nEntropy Bins", fontsize=14)
-    plt.ylabel("Average Value Detected\n", fontsize=14)
+    plt.ylabel("USD\n", fontsize=14)
     plt.yticks(y_ticks, [format_y_value(y, None) for y in y_ticks], fontsize=11)  # Using the formatter for the labels 
     formatter = FuncFormatter(format_y_value)
     plt.gca().yaxis.set_major_formatter(formatter)      

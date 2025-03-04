@@ -75,14 +75,41 @@ def recreate_plot_entropy_vs_final_expected_value_detected(data):
         return f'${y:.2f}'
     
     plt.figure(figsize=(15, 8)) 
-    plt.title("Normalized Entropy vs. Expected Value Detected (in billions USD)", fontsize=14)
+    plt.title("Normalized Entropy vs. Average Expected Value Detected", fontsize=14)
     plt.bar(x_labels, y_values)
     plt.xticks(rotation=45, fontsize=11)
     plt.xlabel("\nEntropy Bins", fontsize=14)
-    plt.ylabel("Average Value Detected\n", fontsize=14)
+    plt.ylabel("USD (Millions)\n", fontsize=14)
     plt.yticks(y_ticks, [format_y_value(y, None) for y in y_ticks], fontsize=11)  # Using the formatter for the labels 
     formatter = FuncFormatter(format_y_value)
     plt.gca().yaxis.set_major_formatter(formatter)      
+    plt.ylim(y_min, y_max)
+    plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
+    plt.savefig(f"entropy_plots/recreated_plots/recreated_entropy_vs_value_detected.png")
+    # plt.show()
+
+def recreate_CUSTOM_plot_entropy_vs_final_expected_value_detected(data):
+    """
+    This is for a custom plot. You can adjust anything needed in here.
+    """
+        
+    x_labels = [bin_range for bin_range in data]
+    y_values = [data[bin_range]["final_expected_value_detected"] for bin_range in data]
+    
+    y_min = 132e6
+    y_max = 139e6
+
+    # Calculate the y-ticks to include a tick at the min and max, and evenly spaced in between
+    num_ticks = 9  # Define number of ticks you want (including min and max)
+    y_ticks = np.linspace(y_min, y_max, num_ticks)
+        
+    plt.figure(figsize=(15, 8)) 
+    plt.title("Normalized Entropy vs. Average Expected Value Detected", fontsize=14)
+    plt.bar(x_labels, y_values)
+    plt.xticks(rotation=45, fontsize=11)
+    plt.xlabel("\nEntropy Bins", fontsize=14)
+    plt.ylabel("USD (Millions)\n", fontsize=14)
+    plt.yticks(y_ticks, [f'${int(y/1e6)}M' for y in y_ticks], fontsize=11)
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
     plt.savefig(f"entropy_plots/recreated_plots/recreated_entropy_vs_value_detected.png")
@@ -114,4 +141,5 @@ if __name__=="__main__":
     time_run_starts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     recreate_plot_entropy_vs_final_fraction_value_detected(data)
-    recreate_plot_entropy_vs_final_expected_value_detected(data) 
+    # recreate_plot_entropy_vs_final_expected_value_detected(data) 
+    recreate_CUSTOM_plot_entropy_vs_final_expected_value_detected(data)
