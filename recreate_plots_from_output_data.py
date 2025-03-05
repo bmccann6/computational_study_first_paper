@@ -94,14 +94,13 @@ def recreate_CUSTOM_plot_entropy_vs_final_expected_value_detected(data):
     """
         
     x_labels = [bin_range for bin_range in data]
-    y_values = [data[bin_range]["final_expected_value_detected"] for bin_range in data]
+    y_values = [(3.8/2) * data[bin_range]["final_expected_value_detected"] for bin_range in data]
     
-    y_min = 132e6
-    y_max = 139e6
+    y_min = 250e6
+    y_max = 264e6
 
     # Calculate the y-ticks to include a tick at the min and max, and evenly spaced in between
-    num_ticks = 9  # Define number of ticks you want (including min and max)
-    y_ticks = np.linspace(y_min, y_max, num_ticks)
+    y_ticks = np.arange(250e6, 264e6 + 2e6, 2e6)
         
     plt.figure(figsize=(15, 8)) 
     plt.title("Normalized Entropy vs. Average Expected Value Detected", fontsize=14)
