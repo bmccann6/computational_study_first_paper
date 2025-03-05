@@ -28,7 +28,7 @@ def get_configuration(config_path):
     # fraction_cargo_containers_inbound_to_US_storing_drugs = max_num_items_across_years/total_original_capacity   # We will multiply all the capacities in hiding_locations by this value in other modules. It is useful because we will never need to have the total capacity be greater than the max capacity needed across all years. Also, by having a fraction we will multiply all capacities by later in other modules, we make the changes to capacities more uniform across locations.
     # fraction_cargo_containers_inbound_to_US_storing_drugs = 0.035
     # fraction_cargo_containers_inbound_to_US_storing_drugs = (10/3)/100
-    fraction_cargo_containers_inbound_to_US_storing_drugs = fraction_containers_from_drug_regions / accessible_fraction_containers_from_drug_regions    
+    fraction_cargo_containers_inbound_to_US_storing_drugs = fraction_containers_from_drug_regions * accessible_fraction_containers_from_drug_regions    
     
     #NOTE: Once we have found good values for the capacities, then change sizes_hiding_locations here so that in create_entropy_plots, we use the capacities we found.
     # sizes_hiding_locations = [int(size * fraction_cargo_containers_inbound_to_US_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]        # At each index i, the size of hiding location i is the value.
