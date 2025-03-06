@@ -51,13 +51,11 @@ if __name__ == "__main__":
     
     _, _, _, _, NUM_HIDING_LOCATIONS, _, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
     prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_prob_distributions_dict(args.prob_distributions_path)
-
-
-    # Calculate the smallest difference between any pair of detectors
-    detector_costs = [detector["cost"] for detector in detectors.values()]  
-    budget_minimum = min(detector_costs) * 3        # This is a decent lower bound.
+    detector_costs = [detector["cost"] for detector in detectors.values()] 
+    
+    budget_minimum = min(detector_costs)       
     budget_maximum =  max(detector_costs) * NUM_HIDING_LOCATIONS
-    # budget_step_size = min(abs(detector_costs[i] - detector_costs[j]) for i in range(len(detector_costs)) for j in range(i + 1, len(detector_costs))) 
+    # budget_step_size = min(abs(detector_costs[i] - detector_costs[j]) for i in range(len(detector_costs)) for j in range(i + 1, len(detector_costs)))         # Calculate the smallest difference between any pair of detectors
     budget_step_size = 50000
     # budgets = range(budget_minimum, budget_maximum + 1, budget_step_size)
     budgets = [1000000]
