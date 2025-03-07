@@ -7,7 +7,7 @@ import argparse
 from matplotlib.ticker import FuncFormatter
 import pickle
 from gurobipy import Model, GRB, quicksum
-import entropy_plot_input_variables
+import setup_data
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 
@@ -225,7 +225,7 @@ if __name__=="__main__":
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config_path, args.prob_distributions_path)
+    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations_each_year, detectors, budget, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_configuration(args.config_path, args.prob_distributions_path)
     validate_data()
     precomputed_equilib_vals = compute_all_years_equilibrium_values(resource_sets, item_vals, sizes_hiding_locations_each_year)
     with open(args.prob_distributions_path, 'rb') as file:

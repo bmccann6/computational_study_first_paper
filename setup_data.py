@@ -1,3 +1,8 @@
+"""
+This module has two functions which are called in other modules to help setup those modules.
+"""
+
+
 import json 
 import pickle
 import re

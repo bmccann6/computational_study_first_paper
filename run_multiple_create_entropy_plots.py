@@ -3,7 +3,7 @@ import json
 import os
 import subprocess
 import argparse
-import entropy_plot_input_variables
+import setup_data
 
 def main():
     # Load the original configuration
@@ -49,8 +49,8 @@ if __name__ == "__main__":
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')    
     args = parser.parse_args()
     
-    _, _, _, _, NUM_HIDING_LOCATIONS, _, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
-    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_prob_distributions_dict(args.prob_distributions_path)
+    _, _, _, _, NUM_HIDING_LOCATIONS, _, detectors, budget = setup_data.get_configuration(args.config_path)
+    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_prob_distributions_dict(args.prob_distributions_path)
     detector_costs = [detector["cost"] for detector in detectors.values()] 
     
     budget_minimum = min(detector_costs)       

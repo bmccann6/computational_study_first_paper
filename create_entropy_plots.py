@@ -43,7 +43,7 @@ import argparse
 from matplotlib.ticker import FuncFormatter
 import datetime
 from gurobipy import Model, GRB, quicksum
-import entropy_plot_input_variables
+import setup_data
 
 
 def validate_data():
@@ -207,7 +207,7 @@ def get_optimal_list_detectors_this_prob_dist(budget, NUM_HIDING_LOCATIONS, dete
 
     m.optimize()
             
-    # Create list of tuples with (detector_type_name, accuracy, x_value)
+    # Create list of tuples with (detector_type_name, accuracy) each time that detector type was purchased to be positioned at a node.
     optimal_list_detectors_this_prob_dist = [(detector_type, detectors[detector_type]['accuracy'])
                                                 for detector_type in detectors for node in nodes if x[detector_type, node].x > 0 ]
         
@@ -234,7 +234,7 @@ def calculate_expected_and_total_values_detected_this_prob_dist(prob_dist, preco
     
     return expected_value_detected_this_prob_dist, expected_total_value_this_prob_dist
 
-def plot_entropy_vs_final_fraction_value_detected(bins_data):
+def plot_entropy_vs_final_fraction_value_detected(bins_data, path_to_save_fig):
     """
     For each entropy bin, we plot the expected fraction of value detected over all probability distributions generated whose entropy falls within this entropy bin.
     """       
@@ -267,10 +267,10 @@ def plot_entropy_vs_final_fraction_value_detected(bins_data):
     
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
-    plt.savefig(f"entropy_plots/entropy_vs_fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png")
+    plt.savefig(path_to_save_fig)
     # plt.show()
 
-def plot_entropy_vs_final_expected_value_detected(bins_data):
+def plot_entropy_vs_final_expected_value_detected(bins_data, path_to_save_fig):
     """
     For each entropy bin, we plot the average expected value detected over all probability distributions generated whose entropy falls within this entropy bin.
     """
@@ -307,7 +307,7 @@ def plot_entropy_vs_final_expected_value_detected(bins_data):
     plt.gca().yaxis.set_major_formatter(formatter)      
     plt.ylim(y_min, y_max)
     plt.subplots_adjust(bottom=0.2, top=0.9)  # Adjust subplot margins to avoid cut-off    
-    plt.savefig(f"entropy_plots/entropy_vs_value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png")
+    plt.savefig(path_to_save_fig)
     # plt.show()
 
 def create_output_json(bins_at_end):
@@ -364,8 +364,8 @@ if __name__=="__main__":
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = entropy_plot_input_variables.get_configuration(args.config_path)
-    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_prob_distributions_dict(args.prob_distributions_path)
+    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = setup_data.get_configuration(args.config_path)
+    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_prob_distributions_dict(args.prob_distributions_path)
     time_run_starts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")     # This is useful for naming our output files. We want all the output files to have a time-stamp to make it easier if we need to match them up later.
     
     validate_data()
@@ -373,5 +373,5 @@ if __name__=="__main__":
     bins_at_end = generate_entropy_plot_data()
     
     create_output_json(bins_at_end)
-    plot_entropy_vs_final_fraction_value_detected(bins_at_end)
-    plot_entropy_vs_final_expected_value_detected(bins_at_end) 
+    plot_entropy_vs_final_fraction_value_detected(bins_at_end, path_to_save_fig=f"entropy_plots/entropy_vs_fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png")
+    plot_entropy_vs_final_expected_value_detected(bins_at_end, path_to_save_fig=f"entropy_plots/entropy_vs_value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png") 

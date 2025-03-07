@@ -1,6 +1,6 @@
 from gurobipy import Model, GRB
 import argparse
-import entropy_plot_input_variables
+import setup_data
 from create_entropy_plots import calculate_expected_value_under_equilibrium_each_node
 
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, fraction_cargo_containers_inbound_to_US_storing_drugs, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_PER_BIN, NUM_BINS = entropy_plot_input_variables.get_configuration(args.config_path, args.prob_distributions_path)
+    item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, fraction_cargo_containers_inbound_to_US_storing_drugs, sizes_hiding_locations_each_year, detector_accuracies, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_configuration(args.config_path, args.prob_distributions_path)
         
 
 

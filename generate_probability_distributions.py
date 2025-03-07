@@ -5,7 +5,7 @@ import curses
 import argparse
 import pickle
 from multiprocessing import Pool, cpu_count
-import entropy_plot_input_variables
+import setup_data
 
 
 def generate_probability_distribution(power):
@@ -109,7 +109,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")           # We just need the config file to get the resource sets
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    _, resource_sets, NUM_RESOURCE_SETS, _, _, _, _, _= entropy_plot_input_variables.get_configuration(args.config_path)
+    _, resource_sets, NUM_RESOURCE_SETS, _, _, _, _, _= setup_data.get_configuration(args.config_path)
 
     NUM_SAMPLES_TO_GENERATE_PER_BIN = 200
     NUM_BINS_TO_HAVE = 20

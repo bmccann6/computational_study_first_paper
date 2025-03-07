@@ -28,7 +28,7 @@ np.random.seed(0)
 #     calculate_expected_fraction_undetected_value_across_resource_sets, update_bin_dict, main
 # )
 # 
-# And assume the following variables are defined in entropy_plot_input_variables:
+# And assume the following variables are defined in setup_data:
 # item_values, resource_sets, sizes_hiding_locations_each_year, detector_accuracies, required_num_samples_per_bin
 #x
 # For our tests below we’ll use small dummy inputs where appropriate.
@@ -124,7 +124,7 @@ class TestEntropyFunctions(unittest.TestCase):
 
     def test_integration_main(self):
         # To speed up this integration test, temporarily set required_num_samples_per_bin to a small value.
-        import entropy_plot_input_variables as epiv
+        import setup_data as epiv
         original_required = epiv.required_num_samples_per_bin
         try:
             epiv.required_num_samples_per_bin = 2
