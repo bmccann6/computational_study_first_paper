@@ -11,9 +11,9 @@ import subprocess
 import argparse
 import setup_data
 
-def main():
+def main(config_path, prob_distributions_path, budgets, NUM_SAMPLES_PER_BIN, NUM_BINS):
     # Load the original configuration
-    with open(args.config_path, "r") as f:
+    with open(config_path, "r") as f:
         config = json.load(f)
     
     # Iterate over some budgets
@@ -27,7 +27,7 @@ def main():
             json.dump(config, f, indent=4)
         
         # Run create_entropy_plots.py with the temporary config file
-        result = subprocess.run(["python", "create_entropy_plots.py", "-config_path", temp_config_file, "-prob_distributions_path", args.prob_distributions_path])
+        result = subprocess.run(["python", "create_entropy_plots.py", "-config_path", temp_config_file, "-prob_distributions_path", prob_distributions_path])
         if result.returncode != 0:
             print(f"Error running create_entropy_plots.py for budget {budget}")
             continue
@@ -53,9 +53,11 @@ if __name__ == "__main__":
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')    
     args = parser.parse_args()
+    config_path = args.config_path  # We use config_path in the function main above.
+    prob_distributions_path = args.prob_distributions_path  # We use prob_distributions_path in the function main above.
     
-    _, _, _, fraction_cargo_containers_inbound_to_US_storing_drugs, _, NUM_HIDING_LOCATIONS, _, detectors, budget = setup_data.get_configuration(args.config_path)
-    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_prob_distributions_dict(args.prob_distributions_path)
+    _, _, _, fraction_cargo_containers_inbound_to_US_storing_drugs, _, NUM_HIDING_LOCATIONS, _, detectors, budget = setup_data.get_configuration(config_path)
+    prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_prob_distributions_dict(prob_distributions_path)
     detector_costs = [detector["cost"] for detector in detectors.values()] 
     
     budget_minimum = min(detector_costs)       
@@ -66,4 +68,4 @@ if __name__ == "__main__":
     budgets = [1000000]
     
         
-    main()
+    main(config_path, prob_distributions_path, budgets, NUM_SAMPLES_PER_BIN, NUM_BINS)

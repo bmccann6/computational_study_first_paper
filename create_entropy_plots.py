@@ -18,7 +18,7 @@ Description:
     This saves time because these values will not change for a given probability distribution, so we do not want to calculate these values every single time we are calculating the 
     expected fraction of value detected and averge value detected for a probability distribution.
 
-    The code then runs generate_entropy_plot_data(), which calculates the expected fraction of value detected and the average expected value detected for each probability distribution in our probability distributions generated pickle file.
+    The code then runs generate_entropy_plot_data, which calculates the expected fraction of value detected and the average expected value detected for each probability distribution in our probability distributions generated pickle file.
 
 
 Outputs:
@@ -30,7 +30,6 @@ Outputs:
     -Entropy vs expected fraction detected plot.
     
     -Entropy vs average value detected plot.
-
 """
 
 
@@ -65,6 +64,9 @@ def calculate_backloading_stack_values(resource_set, item_vals, capacities):
     Then in the next iteration, if that location has its capacity filled, we remove that location then continue on to the next iteration.
     Also, if a resource type is depleted, we remove that resource type then continue on to the next iteration.
     We repeat until we have completed the backloading.
+    
+    Also, we use capacities because the parent function calculate_expected_value_under_equilibrium_each_node is used in other modules, where we 
+    define aribitrary capactities that are not necessarily sizes_hiding_locations.
     """
     hider_resources_sorted = sorted(resource_set.items(), key=lambda x: item_vals[x[0]])
     local_copy_capacities = capacities.copy()          # We make a local copy because we will be modifying the sizes of the hiding locations as we fill them up. But we don't want to globally change the capacities list object we passed in because we need that list in later calls.
@@ -99,6 +101,9 @@ def calculate_breakpoints(backloading_stack_values, capacities):
     Also, we also always add n (the number of locations) to be the final breakpoint. Note that this is 1 more than the last index of the capacities (since python counts from 0).
     
     The mathematical algorithm for this is at the end of the document mathieu wrote in his iPad years ago. Note that the A_i values in mathieu's document are the stack values from pure backloading.
+
+    Also, we use capacities because the parent function calculate_expected_value_under_equilibrium_each_node is used in other modules, where we 
+    define aribitrary capactities that are not necessarily sizes_hiding_locations.   
     """
     
     n = len(capacities)
@@ -131,6 +136,8 @@ def calculate_expected_value_under_equilibrium_each_node(resource_set, item_vals
     This function simply uses the backloaded stack values and the breakpoints. 
     For each pair of consecutive breakpoints, it calculates the average of the backloaded stack values for nodes between that pair.
     This average is the expected value of items that will be at each node between that pair in equilibrium.
+    
+    Also, we use capacities because this function is used in other modules, where we define aribitrary capactities that are not necessarily sizes_hiding_locations.    
     """
     backloading_stack_values = calculate_backloading_stack_values(resource_set, item_vals, capacities)
     breakpoints = calculate_breakpoints(backloading_stack_values, capacities)    
@@ -159,7 +166,7 @@ def compute_each_resource_sets_equilibrium_values_at_each_node(resource_sets, it
         
     return resource_set_to_equilibrium_node_values
 
-def compute_resource_sets_info_for_json():
+def compute_resource_sets_info_for_json(resource_sets, item_vals, sizes_hiding_locations):
     """
     Since the information regarding the resource sets is deterministic and does not depend on the probability distribution, we compute it exactly once here and add it to the json.
     """
@@ -310,21 +317,21 @@ def plot_entropy_vs_final_expected_value_detected(bins_data, path_to_save_fig):
     plt.savefig(path_to_save_fig)
     # plt.show()
 
-def create_output_json(bins_at_end):
+def create_output_json(bins_at_end, resource_sets, item_vals, sizes_hiding_locations, budget, NUM_SAMPLES_PER_BIN, NUM_BINS, time_run_starts): 
     """
     This creates a json file which contains information regarding the resource sets, the expected values detected and expected total values for each probability distribution, the 
     expected fraction of value detected across all probability distributions for a given entropy bin, and the average expected value detected across all probability distributions for a given entropy bin.
     """
-    resource_sets_info = compute_resource_sets_info_for_json()
+    resource_sets_info = compute_resource_sets_info_for_json(resource_sets, item_vals, sizes_hiding_locations)
     json_data = {"resource_sets_info": resource_sets_info}    
     json_data["bins_at_end"] = bins_at_end
 
-    print("Creating json...")
+    print("\nCreating json...")
     with open(f"output_data_entropy_plots/output_data_entropy_plot_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.json", "w") as f:
         json.dump(json_data, f, indent=4)    
     print("Finished creating json.")
-        
-def generate_entropy_plot_data():
+            
+def generate_entropy_plot_data(prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS, precomputed_equilib_vals, NUM_HIDING_LOCATIONS, detectors, budget):    
     """
     This function serves as the main driver of the module. It operates in two primary stages using for-loops:
     1. It constructs bins for each entropy range and calculates for each bin the expected value detected and the expected total values for each probability distribution within these ranges.
@@ -370,8 +377,8 @@ if __name__=="__main__":
     
     validate_data()
     precomputed_equilib_vals = compute_each_resource_sets_equilibrium_values_at_each_node(resource_sets, item_vals, sizes_hiding_locations) 
-    bins_at_end = generate_entropy_plot_data()
+    bins_at_end = generate_entropy_plot_data(prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS, precomputed_equilib_vals, NUM_HIDING_LOCATIONS, detectors, budget)
     
-    create_output_json(bins_at_end)
+    create_output_json(bins_at_end, resource_sets, item_vals, sizes_hiding_locations, budget, NUM_SAMPLES_PER_BIN, NUM_BINS, time_run_starts)
     plot_entropy_vs_final_fraction_value_detected(bins_at_end, path_to_save_fig=f"entropy_plots/entropy_vs_fraction_detected_plots/entropy_vs_fraction_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png")
     plot_entropy_vs_final_expected_value_detected(bins_at_end, path_to_save_fig=f"entropy_plots/entropy_vs_value_detected_plots/entropy_vs_value_detected_budget_{budget}_and_{NUM_SAMPLES_PER_BIN}_samples_per_bin_and_NUM_BINS_{NUM_BINS}_timestamp_{time_run_starts}.png") 

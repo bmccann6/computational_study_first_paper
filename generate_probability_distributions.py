@@ -22,7 +22,7 @@ from multiprocessing import Pool, cpu_count
 import setup_data
 
 
-def generate_probability_distribution(power):
+def generate_probability_distribution(power, resource_sets, NUM_RESOURCE_SETS):
     """
     Generates a probability distribution based on a given power.
 
@@ -41,13 +41,13 @@ def generate_probability_distribution(power):
     probability_values = random_numbers / random_numbers.sum()
     return {year: prob for year, prob in zip(resource_sets.keys(), probability_values)}
 
-def calculate_normalized_entropy(prob_dist):
+def calculate_normalized_entropy(prob_dist, NUM_RESOURCE_SETS):
     probs = np.array(list(prob_dist.values()))
     nonzero_probs = probs[probs > 0]        # Only take log of non-zero entries just in case we get division by 0 errors.
     entropy = -np.sum(nonzero_probs * np.log2(nonzero_probs)) / np.log2(NUM_RESOURCE_SETS)
     return entropy
 
-def update_bin_dict(bins_data, prob_dist, entropy):
+def update_bin_dict(bins_data, prob_dist, entropy, NUM_SAMPLES_TO_GENERATE_PER_BIN):
     """
     For the bin containing 'entropy', append to that bin's list a dictionary where the keys are the prob_dist and entropy of that prob_dist.
     If the bin has reached the required number of samples, stop.
@@ -104,7 +104,8 @@ def worker_task(resource_sets, NUM_RESOURCE_SETS, power, batch_size_per_proc):
     return results
 
 
-def main(stdscr):
+# def main(stdscr):
+def main(stdscr, resource_sets, NUM_RESOURCE_SETS, NUM_SAMPLES_TO_GENERATE_PER_BIN, NUM_BINS_TO_HAVE):
     """
     This function executes a loop for generating probability distributions and categorizing them by normalized entropy.
 
@@ -125,8 +126,7 @@ def main(stdscr):
          - Adjusting the power if the current bin and all higher bins are filled or if too many iterations
            have occurred without filling the bin.
     
-    Args:
-        stdscr (curses.window): The curses window object used for displaying progress updates in the terminal.
+    Note that the argument stdscr (curses.window) is the curses window object used for displaying progress updates in the terminal.
     
     Returns:
         dict: A dictionary where the keys are tuples representing the lower and upper bounds of entropy bins,
@@ -167,7 +167,7 @@ def main(stdscr):
 
             # Update the appropriate bin in bins_data and update iteration counters
             for prob_dist, entropy in all_pairs:
-                bins_data = update_bin_dict(bins_data, prob_dist, entropy)
+                bins_data = update_bin_dict(bins_data, prob_dist, entropy, NUM_SAMPLES_TO_GENERATE_PER_BIN)
                 num_iterations += 1
                 num_iterations_while_loop_at_current_power += 1
 
@@ -200,7 +200,9 @@ if __name__=="__main__":
     NUM_BINS_TO_HAVE = 20
 
     # Run the main function within a curses wrapper to handle terminal display; capture the generated bins data
-    bins_at_end = curses.wrapper(main)
+    bins_at_end = curses.wrapper(lambda stdscr: main(stdscr, resource_sets, NUM_RESOURCE_SETS, NUM_SAMPLES_TO_GENERATE_PER_BIN, NUM_BINS_TO_HAVE))
+    
+    
     
     print("Creating pickle file...")
     with open(f"generated_prob_dist_data/prob_distributions_generated_NUM_SAMPLES_PER_BIN_{NUM_SAMPLES_TO_GENERATE_PER_BIN}_and_NUM_BINS_{NUM_BINS_TO_HAVE}.pkl", "wb") as file:
