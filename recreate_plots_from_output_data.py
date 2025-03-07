@@ -3,8 +3,6 @@ This module is used to recreate plots from existing json output data. It can be 
 Also, we have a function in here for creating a custom plot, should we want to make a plot different than the ones in create_entropy_plots.py using the output json data.
 """
 
-
-
 import json
 import numpy as np
 import matplotlib.pyplot as plt

@@ -1,3 +1,15 @@
+"""
+#! This is a very incomplete module. It was initially created to do an automatic search for detector prices which would be interesting (in a similar fashion to how we made automated_search_for_capacities.py).
+#! But we ended up never needing it because we got interesting results with just a guess of what detector prices could be.
+"""
+
+
+
+
+
+Note that if a detector d_1 has a higher accuracy than a detector d_2, then its cost should be higher as well. Otherwise, there is no point to having detector d_2 because it would never be purchased anyways.
+
+
 from gurobipy import Model, GRB
 import argparse
 import setup_data

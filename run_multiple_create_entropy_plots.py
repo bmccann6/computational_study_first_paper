@@ -1,4 +1,10 @@
-#!/usr/bin/env python3
+"""
+This module is used to iterate over a set of budgets and run the create_entropy_plots.py module for each budget in this set.
+It is useful when trying to find what budgets would result in interesting entropy plots for a given configuration file.
+We simply ignore the budget in the configuration file and temporarily override it with a new budget, then run create_entropy_plots.py for that budget, and store the results.
+I would run this script overnight and then check the results in the morning usually.
+"""
+
 import json
 import os
 import subprocess
@@ -13,8 +19,7 @@ def main():
     # Iterate over some budgets
     for budget in budgets:
         print(f"Running for budget: {budget}")
-        # <-- Modified: Update the budget value in the config
-        config["budget"] = budget
+        config["budget"] = budget   # Set a new the budget value for the config
         
         # Write the modified config to a temporary file
         temp_config_file = f"config_files/temp_config.json"
@@ -55,10 +60,10 @@ if __name__ == "__main__":
     
     budget_minimum = min(detector_costs)       
     budget_maximum =  max(detector_costs) * NUM_HIDING_LOCATIONS
-    # budget_step_size = min(abs(detector_costs[i] - detector_costs[j]) for i in range(len(detector_costs)) for j in range(i + 1, len(detector_costs)))         # Calculate the smallest difference between any pair of detectors
-    budget_step_size = 50000
-    # budgets = range(budget_minimum, budget_maximum + 1, budget_step_size)
-    budgets = [1000000]
+    budget_step_size = min(abs(detector_costs[i] - detector_costs[j]) for i in range(len(detector_costs)) for j in range(i + 1, len(detector_costs)))         # Calculate the smallest difference between any pair of detectors. 
+    # budget_step_size = 50000
+    budgets = range(budget_minimum, budget_maximum + 1, budget_step_size)
+    # budgets = [1000000]
     
         
     main()
