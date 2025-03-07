@@ -22,7 +22,6 @@ from multiprocessing import Pool, cpu_count
 import setup_data
 
 
-
 def generate_probability_distribution(power):
     """
     Generates a probability distribution based on a given power.
@@ -71,8 +70,8 @@ def worker_task(resource_sets, NUM_RESOURCE_SETS, power, batch_size_per_proc):
     """
     Processes a batch of samples to generate probability distributions and compute their normalized entropies.
 
-    This function is intended to run in parallel across multiple processes. For each sample in the batch,
-    it generates a probability distribution by:
+    This function is intended to run in parallel across multiple processes. Each parallel process is given a number of probability distributions to generate (batch_size_per_proc). 
+    For each sample in the batch, it generates a probability distribution by:
       - Drawing `NUM_RESOURCE_SETS` random numbers.
       - Raising these random numbers to the specified `power`.
       - Normalizing the results so that they sum to 1, mapping them to the keys in `resource_sets`.
@@ -82,7 +81,7 @@ def worker_task(resource_sets, NUM_RESOURCE_SETS, power, batch_size_per_proc):
         resource_sets (dict): Dictionary representing the resource sets. The keys are used to map probability values.
         NUM_RESOURCE_SETS (int): The number of random values to generate, corresponding to the number of resource sets.
         power (float): The exponent applied to each random number to adjust the spread of the generated values.
-        batch_size_per_proc (int): The number of samples to generate in this batch.
+        batch_size_per_proc (int): The number of samples to generate in a batch. 
 
     Returns:
         list: A list of tuples, where each tuple contains:

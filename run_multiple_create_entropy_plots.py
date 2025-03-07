@@ -62,8 +62,8 @@ if __name__ == "__main__":
     budget_maximum =  max(detector_costs) * NUM_HIDING_LOCATIONS
     budget_step_size = min(abs(detector_costs[i] - detector_costs[j]) for i in range(len(detector_costs)) for j in range(i + 1, len(detector_costs)))         # Calculate the smallest difference between any pair of detectors. 
     # budget_step_size = 50000
-    budgets = range(budget_minimum, budget_maximum + 1, budget_step_size)
-    # budgets = [1000000]
+    # budgets = range(budget_minimum, budget_maximum + 1, budget_step_size)
+    budgets = [1000000]
     
         
     main()
