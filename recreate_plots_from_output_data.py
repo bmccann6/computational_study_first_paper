@@ -60,7 +60,7 @@ if __name__=="__main__":
     parser.add_argument('-data_path', type=str, required=True, help='Path to the output JSON data of some create_entropy_plots.py run. This is the output data for which you want to recreate the plots.')
     args = parser.parse_args()
     data = format_data_for_plot_recreations(args.data_path)    
-    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = setup_data.get_configuration(args.config_path)
+    item_vals, resource_sets, _, fraction_cargo_containers_inbound_to_US_storing_drugs, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = setup_data.get_configuration(args.config_path)
     time_run_starts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

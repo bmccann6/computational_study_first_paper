@@ -54,7 +54,7 @@ if __name__ == "__main__":
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')    
     args = parser.parse_args()
     
-    _, _, _, _, NUM_HIDING_LOCATIONS, _, detectors, budget = setup_data.get_configuration(args.config_path)
+    _, _, _, fraction_cargo_containers_inbound_to_US_storing_drugs, _, NUM_HIDING_LOCATIONS, _, detectors, budget = setup_data.get_configuration(args.config_path)
     prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_prob_distributions_dict(args.prob_distributions_path)
     detector_costs = [detector["cost"] for detector in detectors.values()] 
     

@@ -364,7 +364,7 @@ if __name__=="__main__":
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     parser.add_argument('-prob_distributions_path', type=str, required=True, help='Path to the Pickle file of probability distributions')
     args = parser.parse_args()
-    item_vals, resource_sets, _, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = setup_data.get_configuration(args.config_path)
+    item_vals, resource_sets, _, fraction_cargo_containers_inbound_to_US_storing_drugs, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, detectors, budget = setup_data.get_configuration(args.config_path)
     prob_distributions_dict, NUM_SAMPLES_PER_BIN, NUM_BINS = setup_data.get_prob_distributions_dict(args.prob_distributions_path)
     time_run_starts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")     # This is useful for naming our output files. We want all the output files to have a time-stamp to make it easier if we need to match them up later.
     

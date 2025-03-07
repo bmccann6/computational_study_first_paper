@@ -148,7 +148,7 @@ def output_final_results(best_solution_found, best_fitness):
         print(f"Location: {loc_name}") 
         print(f"Original real capacity: {original_cap} ")
         
-        scaled_original_cap = original_cap * fraction_cargo_containers_storing_drugs_max_resource_set        
+        scaled_original_cap = original_cap * fraction_cargo_containers_inbound_to_US_storing_drugs      # We need to do this scaling because we are using sorted_locs, not sizes_hiding_locations (which as already pre-scaled). See the comment where we define sorted_locs as to the reason why we use sorted_locs and not just sizes_hiding_locations.        
         print(f"Original real capacity but scaled by fraction_cargo_containers_storing_drugs_max_resource_set: {scaled_original_cap}")
         print(f"GA-chosen capacity: {ga_cap}")
         
@@ -181,12 +181,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load configuration for entropy plot calculations.")
     parser.add_argument('-config_path', type=str, required=True, help='Path to the JSON configuration file.')
     args = parser.parse_args()
-    item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, _, _, = setup_data.get_configuration(args.config_path)
+    item_vals, resource_sets, NUM_RESOURCE_SETS, fraction_cargo_containers_inbound_to_US_storing_drugs, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, _, _, = setup_data.get_configuration(args.config_path)
 
     dummy_detectors= [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5]   # See the module-level docstring for why we can just use a set of dummy detectors.
     dummy_detector_accuracies = [0.868, 0.82, 0.788, 0.67, 0.8, 0.4, 0.4, 0.5, 0.5] + [0] * (NUM_HIDING_LOCATIONS - len(dummy_detectors))
     tolerance_percent_deviation_real_capacity = 15  # This is the percent deviation in real capacity either up or down that can be taken. The smaller tolerance_percent_deviation_real_capacity is, the closer the capacities found by the genetic algorithm will be to their original capacities. However, the smaller tolerance_percent_deviation_real_capacity is, the less diversity in the expected fraction detect could occur between resource sets for our given fixed set of detectors.
-    sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)      # Sort the hiding locations in descending order, from largest capacity, to smallest capacity.
+    sorted_locs = sorted(hiding_locations.items(), key=lambda item: item[1], reverse=True)      # Sort the hiding locations in descending order, from largest capacity, to smallest capacity. We do this instead of just using sizes_hiding_locations because we want the names of the locations along with their capacities, and sizes_hiding_locations only contains the capacities (it doesn't give the names of the locations).
     
     # Chatgpt said we should put this next part of the code in if __name__ == "__main__" because then it makes it globally available. And the deap creator registers custom classes globally. If you put these inside run_genetic_algorithm and call it multiple times, you'll attempt to re-register the same types, which can lead to errors.
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))

@@ -30,7 +30,7 @@ def get_configuration(config_path):
     
     sizes_hiding_locations = [int(size * fraction_cargo_containers_inbound_to_US_storing_drugs) for size in sorted(hiding_locations.values(), reverse=True)]
 
-    return item_vals, resource_sets, NUM_RESOURCE_SETS, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, \
+    return item_vals, resource_sets, NUM_RESOURCE_SETS, fraction_cargo_containers_inbound_to_US_storing_drugs, hiding_locations, NUM_HIDING_LOCATIONS, sizes_hiding_locations, \
             detectors, budget
 
 def get_prob_distributions_dict(prob_distributions_path):
